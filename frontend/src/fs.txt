@@ -1,0 +1,59 @@
+src/
+│
+├── app/
+│   └── store.js
+│
+├── features/
+│   │
+│   ├── auth/
+│   │   ├── authSlice.js
+│   │   ├── authAPI.js
+│   │   └── authSelectors.js
+│   │
+│   ├── chat/
+│   │   ├── chatSlice.js
+│   │   ├── chatAPI.js
+│   │   └── chatSelectors.js
+│   │
+│   ├── message/
+│   │   ├── messageSlice.js
+│   │   ├── messageAPI.js
+│   │   └── messageSelectors.js
+│   │
+│   └── socket/
+│       └── socketSlice.js
+│
+├── pages/
+│   ├── Login.jsx
+│   ├── Register.jsx
+│   └── Chat.jsx
+│
+├── components/
+│   ├── Sidebar.jsx
+│   ├── UserCard.jsx
+│   ├── ChatHeader.jsx
+│   ├── MessageBubble.jsx
+│   ├── MessageInput.jsx
+│   └── Loader.jsx
+│
+├── services/
+│   ├── axios.js
+│   └── socket.js
+│
+├── hooks/
+│   ├── useAuth.js
+│   └── useSocket.js
+│
+├── utils/
+│   ├── formatTime.js
+│   └── constants.js
+│
+├── routes/
+│   └── ProtectedRoute.jsx
+│
+├── styles/
+│   └── global.css
+│
+├── App.jsx
+├── main.jsx
+└── index.css
