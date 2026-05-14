@@ -1,24 +1,26 @@
 import {useState,useEffect,react} from 'react';
 import { useNavigate } from "react-router-dom";
-import axios from "../config/axios.js"
+import axios from "../config/axios.js";
+import {login} from "../app/action/auth.action.js"
+import {useSelector,useDispatch} from "react-redux"
 
 export default function Login(){
+
+
   const navigate = useNavigate();
   const [email,setemail] = useState("");
   const [password , setpassword] = useState("");
+  //state and dispatcher
+  const dispatch = useDispatch();
+  const auth = useSelector((state)=>state.auth);
 
   const handleLogin = async()=>{
     try{
       console.log("logging in");
-      const res = await axios.post("/login",{email,password});
-      console.log(res);
-
+      dispatch(login({email,password}));
       setemail("");
       setpassword("");
-      
-      navigate("/chat");
-      
-      
+      if(auth.isTokenThere)(navigate("/chat"));   
     }catch(err){
        console.log(err);
     }

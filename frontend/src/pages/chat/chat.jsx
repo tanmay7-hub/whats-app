@@ -1,5 +1,7 @@
 import "./chat.css";
 import { useRef, useEffect, useState } from "react";
+import {useSelector , useDispatch} from "react-redux"
+import {getAllUser}from "../../app/action/auth.action.js"
 function Chat() {
   const users = [
     {
@@ -104,15 +106,25 @@ function Chat() {
     },
   ];
   const messageEndRef = useRef(null);
+  const dispatch = useDispatch();
+
+
   useEffect(() => {
     messageEndRef.current.scrollIntoView({
       behavior: "auto",
     });
-   //   const c = document.getElementsByClassName("messages-container")[0];
-   //   c.scrollTop= c.scrollHeight;
   });
+  useEffect(()=>{
+    dispatch(getAllUser());
+  })
+    
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
+
+
+
+  
+
   const handleSearch =()=>{
        console.log("search Clicked");
   }

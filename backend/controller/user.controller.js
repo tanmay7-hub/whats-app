@@ -4,6 +4,19 @@ import bcrypt  from 'bcrypt'
 import jwt from 'jsonwebtoken';
 
 
+
+export const getAllUser = async (req,res)=>{
+   try{
+      const allUser = await User.find({});
+       return res.json(200).json({data:allUser});
+   }catch(err){
+      return res.status(500).json({
+         msg:err.message
+      })
+   }
+}
+
+
 export const receiveMessage = async(req,res)=>{
     try{
          const { reqId } = req.params;
