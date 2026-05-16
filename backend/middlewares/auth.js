@@ -6,10 +6,14 @@ export const protect = async(req,res,next)=>{
        const authHeader = req.headers.authorization;
 
        if(!authHeader){
+        //  console.log(req.headers.authorisation);
+         
          return res.status(400).json({msg:"no token provided"});
        }
+       
 
        const token  = authHeader.split(" ")[1];
+       //    console.log(token);
         
     
        const decode = jwt.verify(token,process.env.JWT_SECRET);

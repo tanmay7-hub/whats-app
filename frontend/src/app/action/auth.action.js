@@ -38,17 +38,17 @@ export const register = createAsyncThunk(
         }
     }
 )
-export const getUser = createAsync(
+export const getUser = createAsyncThunk(
     "auth/getUser",
     async(data,thunkAPI)=>{
         try{
             const res = await clientServer.get("/user/getAllUser",{
                 headers:{
-                    authorisation:"bearer " + localStorage.getItem("token")
+                    authorization:"bearer " + localStorage.getItem("token")
                 }
             });
 
-            return thunkAPI.fulfillerWithValue(res.data);
+            return thunkAPI.fulfillWithValue(res.data);
         }catch(err){
             return thunkAPI.rejectWithValue(err.response);
         }

@@ -6,7 +6,8 @@ const initialState={
     isLoading:false,
     isError:false,
     message:undefined,
-    allUser:[]
+    allUser:[],
+    currUser:undefined,
 
 }
 const counterSlice = createSlice({
@@ -29,21 +30,23 @@ const counterSlice = createSlice({
              state.isLoading=false;
              state.isError= true;
              state.isTokenThere=false
-             state.message = action.payload.msg
+            //  state.message = action.payload.msg
         })
         .addCase(getUser.pending,(state,action)=>{
             state.isLoading = true;
             state.isError = false;
         })
-        .addCase(getUser.fullfilled,(state,action)=>{
+        .addCase(getUser.fulfilled,(state,action)=>{
            state.isLoading = false;
            state.isError = false;
-           state.allUser = action.payload.data
+          
+           state.allUser = action.payload.data;
+            
         })
         .addCase(getUser.rejected , (state,action)=>{
             state.isLoading = false;
             state.isError = false;
-            state.message = action.payload.msg
+            state.message = action.payload.data.msg;
         })
 
         

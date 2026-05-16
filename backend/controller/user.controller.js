@@ -7,8 +7,8 @@ import jwt from 'jsonwebtoken';
 
 export const getAllUser = async (req,res)=>{
    try{
-      const allUser = await User.find({});
-       return res.json(200).json({data:allUser});
+       const allUser = await User.find();
+       return res.status(200).json({data:allUser});
    }catch(err){
       return res.status(500).json({
          msg:err.message
@@ -51,7 +51,16 @@ export const sendMessage =async(req,res)=>{
                receiverId,
                message
        });
-       await newMessage.save();
+       //upgrade it to queue
+        const SenderUser = await User.find({_id:userId});
+        const ReceiverUser = await User.find({_id:receiverId});
+
+        ReceiverUser.lastMessage = message;
+        SenderUser.lastMessage = message;
+        await ReceiverUser.save();
+        await SenderUser.save();
+
+        await newMessage.save();
 
        return res.status(401).json({msg:"message sent successfully"});
 

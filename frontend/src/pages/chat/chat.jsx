@@ -1,66 +1,8 @@
 import "./chat.css";
 import { useRef, useEffect, useState } from "react";
-import {useSelector , useDispatch} from "react-redux"
-import {getAllUser}from "../../app/action/auth.action.js"
+import { useSelector, useDispatch } from "react-redux";
+import { getUser } from "../../app/action/auth.action.js";
 function Chat() {
-  const users = [
-    {
-      id: 1,
-      name: "Rahul",
-      profilePic: "https://i.pravatar.cc/150?img=1",
-      lastMessage: "Hey bro",
-      online: true,
-    },
-    {
-      id: 2,
-      name: "Priya",
-      profilePic: "https://i.pravatar.cc/150?img=2",
-      lastMessage: "Let's meet tomorrow",
-      online: false,
-    },
-    {
-      id: 3,
-      name: "Aman",
-      profilePic: "https://i.pravatar.cc/150?img=3",
-      lastMessage: "Where are you?",
-      online: true,
-    },
-    {
-      id: 4,
-      name: "Sneha",
-      profilePic: "https://i.pravatar.cc/150?img=4",
-      lastMessage: "Okay 👍",
-      online: false,
-    },
-    {
-      id: 5,
-      name: "Rahul",
-      profilePic: "https://i.pravatar.cc/150?img=1",
-      lastMessage: "Hey bro",
-      online: true,
-    },
-    {
-      id: 6,
-      name: "Priya",
-      profilePic: "https://i.pravatar.cc/150?img=2",
-      lastMessage: "Let's meet tomorrow",
-      online: false,
-    },
-    {
-      id: 7,
-      name: "Aman",
-      profilePic: "https://i.pravatar.cc/150?img=3",
-      lastMessage: "Where are you?",
-      online: true,
-    },
-    {
-      id: 8,
-      name: "Sneha",
-      profilePic: "https://i.pravatar.cc/150?img=4",
-      lastMessage: "Okay 👍",
-      online: false,
-    },
-  ];
   const messages = [
     {
       id: 1,
@@ -107,27 +49,30 @@ function Chat() {
   ];
   const messageEndRef = useRef(null);
   const dispatch = useDispatch();
-
+  const auth = useSelector((state) => state.auth);
 
   useEffect(() => {
     messageEndRef.current.scrollIntoView({
       behavior: "auto",
     });
   });
-  useEffect(()=>{
-    dispatch(getAllUser());
-  })
+  useEffect(() => {
+    dispatch(getUser());
+  },[]);
+
+  // useEffect(() => {
+  //   dispatch(getUser());
     
+  // },[auth.alluser]);
+
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
 
+  const users = auth.allUser;
 
-
-  
-
-  const handleSearch =()=>{
-       console.log("search Clicked");
-  }
+  const handleSearch = () => {
+    console.log("search Clicked");
+  };
   return (
     <>
       <div className="container">
@@ -161,21 +106,22 @@ function Chat() {
               <i class="fa-brands fa-sistrix"></i>
             </div>
             <div className="chat-Users-div">
-              {users.map((user) => {
-                return (
-                  <div className="user-side-div">
-                    <div className="profile-wrapper">
-                      <img src={user.profilePic} />
-                      {user.online && <div className="online-dot"></div>}
-                    </div>
+              {auth.allUser &&
+                users.map((user) => {
+                  return (
+                    <div className="user-side-div">
+                      <div className="profile-wrapper">
+                        <img src={user.profilePic} />
+                        {user.isOnline && <div className="online-dot"></div>}
+                      </div>
 
-                    <div className="userName-chat-div">
-                      <p> {user.name}</p>
-                      <p>{user.lastMessage}</p>
+                      <div className="userName-chat-div">
+                        <p> {user.username}</p>
+                        <p>{user.lastMessage}</p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
           <div className="chat-right-div">

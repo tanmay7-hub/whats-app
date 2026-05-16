@@ -20,12 +20,17 @@ export default function Login(){
       dispatch(login({email,password}));
       setemail("");
       setpassword("");
-      if(auth.isTokenThere)(navigate("/chat"));   
     }catch(err){
        console.log(err);
     }
       
   }
+
+  useEffect(()=>{
+     const check = localStorage.getItem("token");
+     console.log(check);
+     if(check !== undefined)(navigate("/chat"));   
+  },)
    return (
     <>
      <div className="container"> 
