@@ -1,7 +1,8 @@
 import "./chat.css";
 import { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getUser } from "../../app/action/auth.action.js";
+import { getUser, getChat } from "../../app/action/auth.action.js";
+import { setCurrUser } from "../../app/reducer/authReducer.js";
 function Chat() {
   const messages = [
     {
@@ -58,17 +59,14 @@ function Chat() {
   });
   useEffect(() => {
     dispatch(getUser());
-  },[]);
-
-  // useEffect(() => {
-  //   dispatch(getUser());
-    
-  // },[auth.alluser]);
+  }, []);
 
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
 
   const users = auth.allUser;
+  const clickedUser = auth.clickedUser;
+  const AllMessages = auth.currChat;
 
   const handleSearch = () => {
     console.log("search Clicked");
@@ -106,10 +104,25 @@ function Chat() {
               <i class="fa-brands fa-sistrix"></i>
             </div>
             <div className="chat-Users-div">
+             
               {auth.allUser &&
                 users.map((user) => {
                   return (
-                    <div className="user-side-div">
+                    <div
+                      onClick={() => {
+                        dispatch(
+                          setCurrUser({
+                           
+                            currUserId: user._id,
+                            currUserProfilePic:user.profilePic,
+                            currUserIsOnline:user.isOnline,
+                            currUserName: user.username,
+                          }),
+                        );
+                        dispatch(getChat({ reqId: user._id }));
+                      }}
+                      className="user-side-div"
+                    >
                       <div className="profile-wrapper">
                         <img src={user.profilePic} />
                         {user.isOnline && <div className="online-dot"></div>}
@@ -127,14 +140,20 @@ function Chat() {
           <div className="chat-right-div">
             <div className="chat-header">
               <div className="chat-user-info">
-                <img src="https://i.pravatar.cc/150?img=1" />
+                <img src= {clickedUser.currUserProfilePic} />
                 <div className="name-div">
-                  <p>Rahul</p>
-                  <p>Online</p>
+                  <p>{ clickedUser.currUserName }</p>
+                  <p>{ clickedUser.currUserIsOnline ? "online":""}</p>
                 </div>
               </div>
             </div>
             <div className="messages-container">
+               
+                     <div className="initialStarting-div">
+                        Start chat with a wave 👋
+                     </div>
+               
+              
               {messages.map((m) => {
                 return (
                   <div

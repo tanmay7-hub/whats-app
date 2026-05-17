@@ -261,3 +261,14 @@
    cursor:pointer;
 }
 
+.initialStarting-div{
+    align-self:center;
+    padding: 0.7rem 1.2rem;
+   border-radius:18px 18px 18px 18px;
+   max-width:300px;
+    max-width:300px;
+    background:linear-gradient(to right,rgb(252, 252, 47),rgb(247, 247, 112));
+    /* background:linear-gradient(to rig) */
+    /* background: linear-gradient(to right,rgb(25, 56, 231),rgb(176, 35, 231)); */
+}
+
