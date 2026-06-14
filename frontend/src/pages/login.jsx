@@ -3,23 +3,29 @@ import { useNavigate } from "react-router-dom";
 import axios from "../config/axios.js";
 import {login} from "../app/action/auth.action.js"
 import {useSelector,useDispatch} from "react-redux"
-
+import socket from "../sockets/socket.js"
 export default function Login(){
 
 
   const navigate = useNavigate();
-  const [email,setemail] = useState("");
-  const [password , setpassword] = useState("");
+  const [email,setemail] = useState("tanmay411@gmail.com");
+  const [password , setpassword] = useState("12345678");
   //state and dispatcher
   const dispatch = useDispatch();
   const auth = useSelector((state)=>state.auth);
 
   const handleLogin = async()=>{
     try{
-      console.log("logging in");
-      dispatch(login({email,password}));
-      setemail("");
-      setpassword("");
+       console.log("logging in");
+       const res = await dispatch(login({email,password}));
+        // socket.emit("user-logged-in", {  id: res.payload.userId});
+         setemail("");
+        setpassword("");
+        if(res.meta.requestStatus === "fulfilled"){
+          navigate("/chat");
+        }
+        
+        
     }catch(err){
        console.log(err);
     }
@@ -29,14 +35,14 @@ export default function Login(){
   useEffect(()=>{
      const check = localStorage.getItem("token");
      console.log(check);
-     if(check !== undefined)(navigate("/chat"));   
-  },)
+     if(check  )(navigate("/chat"));   
+  },[])
    return (
     <>
      <div className="container"> 
             <div className ="main-div">
                <div className ="left-div">
-                   <h1 className="heading">Welcome Backkkk!!!!</h1>
+                   <h1 className="heading">Welcome 😀</h1>
                    <div className="icons-div">  
                         <i class="icons fa-brands fa-facebook"></i>
                    
@@ -61,8 +67,10 @@ export default function Login(){
                    <p>
                        Enter you personal details and start journey with us.
                    </p>
-                   <div className="signUp-div">
-                      Sign IN
+                   <div onClick={()=>{
+                        navigate("/register");
+                   }} className="signUp-div">
+                      Sign In
                    </div>
 
                </div>

@@ -1,76 +1,170 @@
 import "./chat.css";
 import { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getUser, getChat } from "../../app/action/auth.action.js";
-import { setCurrUser } from "../../app/reducer/authReducer.js";
+import { useNavigate } from "react-router-dom";
+import {
+  getUser,
+  getChat,
+  sendMessage,
+  getCurrUser,
+} from "../../app/action/auth.action.js";
+import {
+  setCurrUser,
+  setChatNull,
+  addMessage,
+  updateDeliveryStatus,
+  updateMessageSeenStatus,
+  UnreadIncrement,
+} from "../../app/reducer/authReducer.js";
+import MessageContainer from "./MessagesContainer/message.jsx";
+import socket from "../../sockets/socket.js";
+import chatwall from "../../assets/chat-wall.png";
+import { formatTime } from "../../utils/timer.js";
 function Chat() {
-  const messages = [
-    {
-      id: 1,
-      sender: "other",
-      text: "Hey Tanmayorgrignorigjkbkjkvoirgnroignignign 👋",
-      time: "10:20 AM",
-    },
-    {
-      id: 2,
-      sender: "me",
-      text: "Hello Rahul!",
-      time: "10:21 AM",
-    },
-    {
-      id: 3,
-      sender: "other",
-      text: "How's the project going?",
-      time: "10:22 AM",
-    },
-    {
-      id: 4,
-      sender: "me",
-      text: "Working on the chat UI currently 😄",
-      time: "10:23 AM",
-    },
-    {
-      id: 5,
-      sender: "other",
-      text: "Looks clean already",
-      time: "10:24 AM",
-    },
-    {
-      id: 6,
-      sender: "me",
-      text: "Still need to integrate sockets",
-      time: "10:25 AM",
-    },
-    {
-      id: 7,
-      sender: "other",
-      text: "That'll make it feel real-time",
-      time: "10:26 AM",
-    },
-  ];
   const messageEndRef = useRef(null);
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    messageEndRef.current.scrollIntoView({
-      behavior: "auto",
-    });
-  });
-  useEffect(() => {
-    dispatch(getUser());
-  }, []);
+  const navigate = useNavigate();
 
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
+  const [Image , setImage] = useState(null);
+  const [typingUserId, settypingUserId] = useState(null);
 
   const users = auth.allUser;
   const clickedUser = auth.clickedUser;
   const AllMessages = auth.currChat;
+  const timer = useRef(null);
+  const filteredUsers = users.filter((user) =>
+    user.username.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  const handleSearch = () => {
-    console.log("search Clicked");
+  const handleSend = async () => {
+    if (Msg !== "") {
+      socket.emit("msg-send", {
+        message: Msg,
+        receiverId: clickedUser.currUserId,
+        senderId: auth.UserId,
+      });
+      setMsg("");
+    }
   };
+
+  useEffect(() => {
+    socket.on("msg-sent", (data) => {
+      dispatch(addMessage(data));
+    });
+    return () => {
+      socket.off("msg-sent");
+    };
+  }, []);
+  useEffect(() => {
+    if (localStorage.getItem("token") == null) {
+      navigate("/login");
+    }
+  }, []);
+
+  useEffect(() => {
+    socket.on("refresh-users", () => {
+      dispatch(getUser());
+    });
+    return () => {
+      socket.off("refresh-users");
+    };
+  }, []);
+  useEffect(() => {
+    if (localStorage.getItem("token") !== null) {
+      dispatch(getUser());
+      if (auth.userClicked) {
+        messageEndRef.current.scrollIntoView({
+          behavior: "auto",
+        });
+      }
+    }
+  }, [auth.currChat]);
+  //details about curr user
+  useEffect(() => {
+    if (localStorage.getItem("token") !== null) {
+      dispatch(getCurrUser());
+    }
+  }, []);
+
+  //user fetching
+  useEffect(() => {
+    if (auth.UserId !== undefined) {
+      socket.connect();
+      socket.emit("user-logged-in", { id: auth.UserId });
+    }
+  }, [auth.UserId]);
+  //receiving message from socket
+  useEffect(() => {
+    socket.on("receive-message", (data) => {
+      if (clickedUser.currUserId === data.senderId) {
+        dispatch(addMessage(data));
+
+        socket.emit("msg-delivered", {
+          messageId: data._id,
+          senderId: data.senderId,
+        });
+
+        socket.emit("chat-opened", {
+          senderId: data.senderId,
+          receiverId: data.receiverId,
+        });
+      } else {
+        dispatch(UnreadIncrement(data));
+      }
+    });
+
+    return () => {
+      socket.off("receive-message");
+    };
+  }, [clickedUser.currUserId]);
+  //typing indicator
+  useEffect(() => {
+    const handleTyping = (data) => {
+      settypingUserId(data.senderId);
+      messageEndRef.current.scrollIntoView({
+        behavior: "auto",
+      });
+    };
+    const stopTyping = (data) => {
+      settypingUserId(null);
+    };
+    socket.on("user-typing", handleTyping);
+    socket.on("stop-typing", stopTyping);
+
+    return () => {
+      socket.off("user-typing", handleTyping);
+      socket.off("stop-typing", stopTyping);
+    };
+  }, []);
+  // delivery status updating in ui
+  useEffect(() => {
+    socket.on("message-delivered", (data) => {
+      //dispatch here the updating function in ui
+      dispatch(updateDeliveryStatus({ messageId: data.messageId }));
+    });
+
+    return () => {
+      socket.off("message-delivered");
+    };
+  }, []);
+  // msg seen update
+  useEffect(() => {
+    socket.on("update-seen", async (data) => {
+      console.log("udpate called");
+      console.log("sender:", typeof clickedUser.currUserId);
+      console.log("receiver:", typeof data.receiverId);
+      if (data.receiverId === clickedUser.currUserId) {
+        dispatch(updateMessageSeenStatus(data));
+      }
+    });
+    return () => {
+      socket.off("update-seen");
+    };
+  }, [clickedUser.currUserId]);
+
   return (
     <>
       <div className="container">
@@ -98,27 +192,32 @@ function Chat() {
                 type="text"
                 onChange={(e) => {
                   setsearch(e.target.value);
+                  handleSearch();
                 }}
                 value={search}
               />
               <i class="fa-brands fa-sistrix"></i>
             </div>
             <div className="chat-Users-div">
-             
-              {auth.allUser &&
-                users.map((user) => {
+              {filteredUsers.map((user) => {
+                if (user._id !== auth.UserId)
                   return (
                     <div
                       onClick={() => {
+                        dispatch(setChatNull());
+
                         dispatch(
                           setCurrUser({
-                           
+                            currUserLastSeen: user.lastSeen,
                             currUserId: user._id,
-                            currUserProfilePic:user.profilePic,
-                            currUserIsOnline:user.isOnline,
+                            currUserProfilePic: user.profilePic,
+                            currUserIsOnline: user.isOnline,
                             currUserName: user.username,
                           }),
                         );
+                        socket.emit("chat-opened", {
+                          senderId: user._id,
+                        });
                         dispatch(getChat({ reqId: user._id }));
                       }}
                       className="user-side-div"
@@ -130,56 +229,143 @@ function Chat() {
 
                       <div className="userName-chat-div">
                         <p> {user.username}</p>
-                        <p>{user.lastMessage}</p>
+                        <p
+                          style={{
+                            fontWeight: user.unreadCount > 0 ? "600" : "400",
+                            color: user.unreadCount > 0 ? "#0f0101e8" : "#777",
+                          }}
+                        >
+                          {user.lastMessage}
+                        </p>
                       </div>
+                      {user.unreadCount > 0 && (
+                        <div className="unread-badge">{user.unreadCount}</div>
+                      )}
                     </div>
                   );
-                })}
+              })}
             </div>
           </div>
-          <div className="chat-right-div">
-            <div className="chat-header">
-              <div className="chat-user-info">
-                <img src= {clickedUser.currUserProfilePic} />
-                <div className="name-div">
-                  <p>{ clickedUser.currUserName }</p>
-                  <p>{ clickedUser.currUserIsOnline ? "online":""}</p>
+          {auth.userClicked && (
+            <div className="chat-right-div">
+              <div className="chat-header">
+                <div className="chat-user-info">
+                  <img src={clickedUser.currUserProfilePic} />
+                  <div className="name-div">
+                    <p>{clickedUser.currUserName}</p>
+                    <p>
+                      {clickedUser.currUserIsOnline
+                        ? "online"
+                        : clickedUser.currUserLastSeen === null
+                          ? ""
+                          : `Last seen ${formatTime(clickedUser.currUserLastSeen)}`}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="messages-container">
-               
-                     <div className="initialStarting-div">
-                        Start chat with a wave 👋
-                     </div>
-               
-              
-              {messages.map((m) => {
-                return (
-                  <div
-                    className={
-                      m.sender == "me" ? "my-message" : "other-message"
-                    }
-                  >
-                    <p>{m.text}</p>
-                    <span>{m.time}</span>
+              <div className="messages-container">
+                {auth.currChat.length === 0 && (
+                  <div className="initialStarting-div">
+                    Start chat with a wave 👋
                   </div>
-                );
-              })}
-              <div ref={messageEndRef}></div>
+                )}
+
+                {AllMessages !== undefined &&
+                  AllMessages.map((m) => {
+                    return (
+                      <div
+                        className={
+                          m.senderId === clickedUser.currUserId
+                            ? "other-message"
+                            : "my-message"
+                        }
+                      >
+                        <p>{m.message}</p>
+                        <span className="message-meta">
+                          {new Date(m.createdAt)
+                            .toLocaleTimeString()
+                            .substring(0, 5)}
+
+                          {m.senderId !== clickedUser.currUserId &&
+                            (m.seen ? (
+                              <i className="fa-solid fa-check-double seen-tick"></i>
+                            ) : m.delivered ? (
+                              <i className="fa-solid fa-check-double"></i>
+                            ) : (
+                              <i className="fa-solid fa-check"></i>
+                            ))}
+                        </span>
+                      </div>
+                    );
+                  })}
+                {typingUserId == clickedUser.currUserId && (
+                  <div className="typing-div other-message">
+                    <p>Typing...</p>
+                  </div>
+                )}
+                <div ref={messageEndRef}></div>
+              </div>
+
+              <div className="message-input-div">
+                   <div 
+                    className ="message-input-upper-div"
+                   >
+                    {Image!== null && 
+                      
+                     <img src ={
+                        URL.createObjectURL(Image)
+                     }/>
+                    }
+                  </div>
+                          <div 
+                          className ="message-input-lower-div"
+                          >
+                     <input
+                 type = "file"
+                 id = "imageInput"
+                 style={{display:"none"}}
+                 onChange={(e)=>{
+                  console.log(e.target.files);
+                      setImage(e.target.files[0]);
+                 }}
+                />
+                <label
+                htmlFor="imageInput"
+                className="upload-btn" 
+                 > <i className="fa-solid fa-paperclip"></i></label>
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                    onChange={(e) => {
+                    clearTimeout(timer.current);
+                    socket.emit("user-typing", {
+                      senderId: auth.UserId,
+                      receiverId: clickedUser.currUserId,
+                    });
+
+                    timer.current = setTimeout(() => {
+                      socket.emit("stop-typing", {
+                        senderId: auth.UserId,
+                        receiverId: clickedUser.currUserId,
+                      });
+                    }, 1000);
+                    setMsg(e.target.value);
+                    }}
+                  value={Msg}
+                />
+                <button onClick={handleSend}>Send</button>
+                          </div>
+              </div>
+
             </div>
-            <div className="message-input-div">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                onChange={(e) => {
-                  setMsg(e.target.value);
-                }}
-                value={Msg}
-              />
-              <button onClick={handleSearch}>Send</button>
+          )}
+          {!auth.userClicked && (
+            <div className="chat-right-div-initial">
+              <img className="chat-wall" src={chatwall} />
+              <h2>No chat selected</h2>
+              <p>Select a user to start chatting</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

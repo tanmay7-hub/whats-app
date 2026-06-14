@@ -89,8 +89,8 @@
    justify-content:center;
    align-items:center;
    gap:1.1rem;
-   /* background: linear-gradient(to right,rgb(253, 67, 78),rgb(253, 64, 104)); */
-   background: linear-gradient(to right,rgb(25, 56, 231),rgb(176, 35, 231));
+   background: linear-gradient(to right,rgb(253, 67, 78),rgb(253, 64, 104));
+   /* background: linear-gradient(to right,rgb(25, 56, 231),rgb(176, 35, 231)); */
 }
 .signUp-div{
     padding: 0.6rem 3rem;

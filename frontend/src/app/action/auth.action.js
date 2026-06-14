@@ -1,5 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import clientServer from "../../config/axios.js";
+import socket from "../../sockets/socket.js";
+import { useSelector, useDispatch  } from "react-redux";
+
 
 export const login = createAsyncThunk(
   "auth/loginUser",
@@ -16,6 +19,22 @@ export const login = createAsyncThunk(
     }
   },
 );
+export const getCurrUser = createAsyncThunk(
+  "auth/getCurrUser",
+  async(data,thunkAPI)=>{
+    try{
+      const res = await clientServer.get("/getCurrUser" , {
+           headers: {
+              authorization: "bearer " + localStorage.getItem("token"),
+           },
+      });
+    
+         return thunkAPI.fulfillWithValue(res.data);
+    }catch(err){
+      return thunkAPI.rejectWithValue(err.response);
+    }
+  }
+)
 export const register = createAsyncThunk(
   "auth/registerUser",
   async (data, thunkAPI) => {
@@ -46,13 +65,14 @@ export const getUser = createAsyncThunk(
       return thunkAPI.fulfillWithValue(res.data);
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response);
-    }
+    }  
   },
 );
 export const getChat = createAsyncThunk(
   "auth/getChat",
   async (data, thunkAPI) => {
     try {
+      console.log(data);
       const res = await clientServer.get("/message", {
         params: {
           reqId: data.reqId,
@@ -66,4 +86,23 @@ export const getChat = createAsyncThunk(
       return thunkAPI.rejectWithValue(err);
     }
   },
+);
+export const sendMessage = createAsyncThunk(
+  "auth/sendMessage",
+   async(data,thunkAPI)=>{
+       try{
+           const res = await clientServer.post("message/send",{
+                message :data.message,
+               receiverId:data.receiverId
+           },{
+            headers: {
+                 authorization: "bearer " + localStorage.getItem("token"),
+            },
+           });
+
+           return thunkAPI.fulfillWithValue(res);
+       }catch(err){
+        return thunkAPI.rejectWithValue(err);
+       }
+   }
 );
