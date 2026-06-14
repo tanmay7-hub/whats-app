@@ -12,9 +12,25 @@ const messageSchema = new mongoose.Schema({
          required:true
       },
       message:{
-        type:String,
+        type:{
+         type:String,
+         enum:["text","image","audio"],
+         default:"text",
+      },
         required:true
+      },
+      message:String,
+      imageUrl:String,
+      audioUrl:String,
+      delivered:{
+         type:Boolean,
+         default:false
+      },
+      seen:{
+         type:Boolean,
+         default:false
       }
+  
 },{timestamps:true});
 
 
