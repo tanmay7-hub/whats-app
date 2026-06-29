@@ -270,12 +270,13 @@
     background-color:rgb(24, 173, 79); 
   
    color:white;
-
+   
    /* padding:0.8rem 1rem; */
    border-radius:18px 18px 0 18px;
 
    max-width:300px;
 }
+
 .other-message{
    align-self:flex-start;
     padding: 0.7rem 1.2rem;
@@ -283,6 +284,11 @@
    /* background-color:#ec8268c9;  */
    border-radius:18px 18px 18px 0;
    max-width:300px;
+}
+.my-message img , .other-message img{
+   margin-block: 0.5rem ; 
+   height:200px;
+   width:250px;
 }
 .my-message span,
 .other-message span{
@@ -314,6 +320,7 @@
     cursor:pointer;
 
 }
+
 .message-input-upper-div img{
   margin: 0.2rem 1rem;
    height:70px;
@@ -388,4 +395,13 @@
 
 .upload-btn:hover{
    background:#e4e4e4;
+}
+.audio-div{
+   background-color:#dfdcdc;
+   padding: 0.7rem 0.9rem;
+   border-radius:50%;
+   transition:all 0.2s;
+}
+.audio-div:hover{
+   transform:scale(1.1);
 }

@@ -2,6 +2,7 @@ import "./chat.css";
 import { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import clientServer from "../../config/axios.js";
 import {
   getUser,
   getChat,
@@ -29,7 +30,14 @@ function Chat() {
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
   const [Image , setImage] = useState(null);
+  const [ImagePreview , setImagePreview] = useState(null);
   const [typingUserId, settypingUserId] = useState(null);
+  const [Send , setSend ] = useState(false);
+  const [isRecording , setisRecording] = useState(false);
+  const audioRecorderRef  = useRef(null);
+  const chunksRef = useRef([]);
+
+
 
   const users = auth.allUser;
   const clickedUser = auth.clickedUser;
@@ -39,15 +47,65 @@ function Chat() {
     user.username.toLowerCase().includes(search.toLowerCase()),
   );
 
+
+  const startAudioRecording = async()=>{
+      const stream = await navigator.mediaDevices.getUserMedia({
+         audio:true
+      });
+      const recorder = new MediaRecorder(stream);
+
+      audioRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable =((e)=>{
+        chunksRef.current.push(e);
+      });
+     
+       recorder.start();
+       setisRecording(true);
+
+  }
+  const stopAudioRecording = async()=>{
+        const recorder = audioRecorderRef.current;
+        
+
+        recorder.onstop =  (async()=>{
+            const audioBlob = new Blob(chunksRef.current , {type:"audio/webm"});
+
+            console.log(audioBlob);
+
+        })
+        recorder.stop();
+        setisRecording(false);
+  }
+
+  const getImageUrl = async()=>{
+      const formData = new FormData();
+
+      formData.append('image',Image);
+      const res = await clientServer.post("/upload-image",formData);
+      console.log("res:",res.data);
+      return res.data.imageUrl;
+  };
   const handleSend = async () => {
-    if (Msg !== "") {
+     if(Send)return;
+     if(Msg == "" && Image == null) return ;
+     setSend(true);
+      let ImageUrl = null;
+      if(Image){
+          ImageUrl = await getImageUrl();
+      }
       socket.emit("msg-send", {
         message: Msg,
+        image:ImageUrl,
         receiverId: clickedUser.currUserId,
         senderId: auth.UserId,
       });
       setMsg("");
-    }
+      setImage(null);
+      setImagePreview(null);
+      setSend(false);
+    
   };
 
   useEffect(() => {
@@ -120,6 +178,8 @@ function Chat() {
       socket.off("receive-message");
     };
   }, [clickedUser.currUserId]);
+
+
   //typing indicator
   useEffect(() => {
     const handleTyping = (data) => {
@@ -279,7 +339,8 @@ function Chat() {
                             ? "other-message"
                             : "my-message"
                         }
-                      >
+                      >  
+                        { m.imageUrl  && <img src = {m.imageUrl} />}
                         <p>{m.message}</p>
                         <span className="message-meta">
                           {new Date(m.createdAt)
@@ -312,9 +373,7 @@ function Chat() {
                    >
                     {Image!== null && 
                       
-                     <img src ={
-                        URL.createObjectURL(Image)
-                     }/>
+                     <img src ={ ImagePreview }/>
                     }
                   </div>
                           <div 
@@ -325,8 +384,8 @@ function Chat() {
                  id = "imageInput"
                  style={{display:"none"}}
                  onChange={(e)=>{
-                  console.log(e.target.files);
                       setImage(e.target.files[0]);
+                      setImagePreview(URL.createObjectURL(e.target.files[0]));
                  }}
                 />
                 <label
@@ -354,7 +413,19 @@ function Chat() {
                   value={Msg}
                 />
                 <button onClick={handleSend}>Send</button>
-                          </div>
+                          <div className = "audio-div" onClick={()=>{
+                              if(isRecording){
+                                  stopAudioRecording();
+                              }else {
+                                  startAudioRecording();
+                              }
+                          }}> { 
+                          isRecording ?
+                          <i class="fa-solid fa-stop"></i>
+                          :<i className="fa-solid fa-microphone"></i>}
+                           </div>        
+                         
+                </div>
               </div>
 
             </div>

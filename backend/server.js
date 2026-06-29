@@ -70,11 +70,12 @@ io.on("connection", (socket) => {
         }
 
   });
-  socket.on("msg-send", async (data) => {
+  socket.on("msg-send", async (data) => { 
     const newMessage = new Message({
       senderId: data.senderId,
       receiverId: data.receiverId,
       message: data.message,
+      imageUrl:data.image
     });
     await User.updateOne(
       { _id: data.senderId },
@@ -96,7 +97,7 @@ io.on("connection", (socket) => {
 
     if (receiverSocketId ) {
         console.log("received msg in backend")
-       io.to(receiverSocketId).emit("receive-message", newMessage);
+        io.to(receiverSocketId).emit("receive-message", newMessage);
         
     }
   });
