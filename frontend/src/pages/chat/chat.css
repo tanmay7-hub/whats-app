@@ -290,16 +290,27 @@
    height:200px;
    width:250px;
 }
+
+
 .my-message span,
 .other-message span{
    display:block;
-   margin-top:5px;
+  
    font-size:12px;
    opacity:0.7;
 }
 .my-message,
 .other-message{
    overflow-wrap:anywhere;
+}
+.my-message.audio-bubble,
+.other-message.audio-bubble{
+   max-width:340px;
+
+}
+
+.my-message.audio-bubble{
+   background:#18ad4f;
 }
 .message-input-div{
    display:flex;
@@ -363,6 +374,8 @@
     justify-content: flex-end;
     gap: 4px;
     font-size: 12px;
+
+    
 }
 .seen-tick{
     color: #53bdeb;  
@@ -404,4 +417,25 @@
 }
 .audio-div:hover{
    transform:scale(1.1);
+}
+.audio-bubble{
+   padding:8px;
+}
+.audio-bubble{
+   padding:8px 10px;
+   width:fit-content;
+   max-width:320px;
+}
+
+.audio-bubble audio{
+   display:block;
+   width:250px;
+}
+
+.message-meta{
+
+   display:flex;
+   flex-direction:row;
+   justify-content:flex-end;
+   margin-top:4px;
 }

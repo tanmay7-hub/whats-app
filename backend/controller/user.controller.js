@@ -41,7 +41,7 @@ export const photoUpload = async(req,res)=>{
 
          const result = await  new Promise(async(resolve,reject)=>{
 
-            const stream =  cloudinary.uploader.upload_stream(
+              const stream =  cloudinary.uploader.upload_stream(
                          {folder:"chat-app"},
                          (err,rs)=>{
                                if(err){
@@ -58,6 +58,28 @@ export const photoUpload = async(req,res)=>{
       return res.status(500).json({ msg:"upload endpoint error" ,err })
     }
 };
+export const audioUpload = async(req,res)=>{
+  try{
+     const result = await new Promise(async(resolve,reject)=>{
+              
+          const stream = cloudinary.uploader.upload_stream(
+              {folder : "voice-notes",
+                resource_type:"video"
+              },
+              (err,rs)=>{
+                if(err)reject(err);
+                else resolve(rs);
+              }
+          );
+          stream.end(req.file.buffer);
+     });
+    
+     return res.status(200).json({msg:"audio uploaded successfully" , audioUrl : result.secure_url});
+
+  }catch(err){
+    return res.status(500).json({msg:'error at audio upload endpoint',err});
+  }
+}
 export const getCurrUser = async (req, res) => {
   try {
     return res.json({

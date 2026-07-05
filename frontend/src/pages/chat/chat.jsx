@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import clientServer from "../../config/axios.js";
+import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx"
 import {
   getUser,
   getChat,
@@ -29,15 +30,14 @@ function Chat() {
 
   const [Msg, setMsg] = useState("");
   const [search, setsearch] = useState("");
-  const [Image , setImage] = useState(null);
-  const [ImagePreview , setImagePreview] = useState(null);
+  const [Image, setImage] = useState(null);
+  const [ImagePreview, setImagePreview] = useState(null);
   const [typingUserId, settypingUserId] = useState(null);
-  const [Send , setSend ] = useState(false);
-  const [isRecording , setisRecording] = useState(false);
-  const audioRecorderRef  = useRef(null);
+  const [Send, setSend] = useState(false);
+  const [isRecording, setisRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const audioRecorderRef = useRef(null);
   const chunksRef = useRef([]);
-
-
 
   const users = auth.allUser;
   const clickedUser = auth.clickedUser;
@@ -47,67 +47,77 @@ function Chat() {
     user.username.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const getImageUrl = async () => {
+    const formData = new FormData();
 
-  const startAudioRecording = async()=>{
-      const stream = await navigator.mediaDevices.getUserMedia({
-         audio:true
-      });
-      const recorder = new MediaRecorder(stream);
-
-      audioRecorderRef.current = recorder;
-      chunksRef.current = [];
-
-      recorder.ondataavailable =((e)=>{
-        chunksRef.current.push(e);
-      });
-     
-       recorder.start();
-       setisRecording(true);
-
-  }
-  const stopAudioRecording = async()=>{
-        const recorder = audioRecorderRef.current;
-        
-
-        recorder.onstop =  (async()=>{
-            const audioBlob = new Blob(chunksRef.current , {type:"audio/webm"});
-
-            console.log(audioBlob);
-
-        })
-        recorder.stop();
-        setisRecording(false);
-  }
-
-  const getImageUrl = async()=>{
-      const formData = new FormData();
-
-      formData.append('image',Image);
-      const res = await clientServer.post("/upload-image",formData);
-      console.log("res:",res.data);
-      return res.data.imageUrl;
+    formData.append("image", Image);
+    const res = await clientServer.post("/upload-image", formData);
+    console.log("res:", res.data);
+    return res.data.imageUrl;
   };
+  const getAudioUrl = async () => {
+    const formData = new FormData();
+    formData.append("audio", audioBlob);
+    const res = await clientServer.post("/upload-audio", formData);
+
+    console.log(res.data);
+    return res.data.audioUrl;
+  };
+
   const handleSend = async () => {
-     if(Send)return;
-     if(Msg == "" && Image == null) return ;
-     setSend(true);
-      let ImageUrl = null;
-      if(Image){
-          ImageUrl = await getImageUrl();
-      }
-      socket.emit("msg-send", {
-        message: Msg,
-        image:ImageUrl,
-        receiverId: clickedUser.currUserId,
-        senderId: auth.UserId,
-      });
-      setMsg("");
-      setImage(null);
-      setImagePreview(null);
-      setSend(false);
-    
+    if (Send) return;
+    if (Msg == "" && Image == null && audioBlob == null) return;
+    setSend(true);
+    let ImageUrl = null;
+    let audioUrl = null;
+    if (Image) {
+      ImageUrl = await getImageUrl();
+    }
+    if (audioBlob) {
+      audioUrl = await getAudioUrl();
+    }
+
+    socket.emit("msg-send", {
+      message: Msg,
+      image: ImageUrl,
+      audio: audioUrl,
+      receiverId: clickedUser.currUserId,
+      senderId: auth.UserId,
+    });
+    setMsg("");
+    setImage(null);
+    setImagePreview(null);
+    setSend(false);
+    setAudioBlob(null);
   };
 
+  const startAudioRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    const recorder = new MediaRecorder(stream);
+
+    audioRecorderRef.current = recorder;
+    chunksRef.current = [];
+
+    recorder.ondataavailable = (e) => {
+      chunksRef.current.push(e.data);
+    };
+
+    recorder.start();
+    setisRecording(true);
+  };
+  const stopAudioRecording = async () => {
+    const recorder = audioRecorderRef.current;
+
+    recorder.onstop = async () => {
+      const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+      setAudioBlob(audioBlob);
+    };
+    recorder.stop();
+    setisRecording(false);
+    handleSend();
+  };
   useEffect(() => {
     socket.on("msg-sent", (data) => {
       dispatch(addMessage(data));
@@ -178,7 +188,6 @@ function Chat() {
       socket.off("receive-message");
     };
   }, [clickedUser.currUserId]);
-
 
   //typing indicator
   useEffect(() => {
@@ -334,15 +343,21 @@ function Chat() {
                   AllMessages.map((m) => {
                     return (
                       <div
-                        className={
+                        className={`${
                           m.senderId === clickedUser.currUserId
                             ? "other-message"
                             : "my-message"
-                        }
-                      >  
-                        { m.imageUrl  && <img src = {m.imageUrl} />}
+                        } ${m.audioUrl ? "audio-bubble" : ""}`}
+                      >
+                        {m.audioUrl && (
+                          <div className="audio-message">
+                            <MusicPlayer audioUrl={m.audioUrl} />
+                            
+                          </div>
+                        )}
+                        {m.imageUrl && <img src={m.imageUrl} />}
                         <p>{m.message}</p>
-                        <span className="message-meta">
+                        <div className="message-meta">
                           {new Date(m.createdAt)
                             .toLocaleTimeString()
                             .substring(0, 5)}
@@ -355,7 +370,7 @@ function Chat() {
                             ) : (
                               <i className="fa-solid fa-check"></i>
                             ))}
-                        </span>
+                        </div>
                       </div>
                     );
                   })}
@@ -368,66 +383,66 @@ function Chat() {
               </div>
 
               <div className="message-input-div">
-                   <div 
-                    className ="message-input-upper-div"
-                   >
-                    {Image!== null && 
-                      
-                     <img src ={ ImagePreview }/>
-                    }
-                  </div>
-                          <div 
-                          className ="message-input-lower-div"
-                          >
-                     <input
-                 type = "file"
-                 id = "imageInput"
-                 style={{display:"none"}}
-                 onChange={(e)=>{
+                <div className="message-input-upper-div">
+                  {Image !== null && <img src={ImagePreview} />}
+                </div>
+                <div className="message-input-lower-div">
+                  <input
+                    type="file"
+                    id="imageInput"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
                       setImage(e.target.files[0]);
                       setImagePreview(URL.createObjectURL(e.target.files[0]));
-                 }}
-                />
-                <label
-                htmlFor="imageInput"
-                className="upload-btn" 
-                 > <i className="fa-solid fa-paperclip"></i></label>
-                <input
-                  type="text"
-                  placeholder="Type a message..."
+                    }}
+                  />
+                  <label htmlFor="imageInput" className="upload-btn">
+                    {" "}
+                    <i className="fa-solid fa-paperclip"></i>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Type a message..."
                     onChange={(e) => {
-                    clearTimeout(timer.current);
-                    socket.emit("user-typing", {
-                      senderId: auth.UserId,
-                      receiverId: clickedUser.currUserId,
-                    });
-
-                    timer.current = setTimeout(() => {
-                      socket.emit("stop-typing", {
+                      clearTimeout(timer.current);
+                      socket.emit("user-typing", {
                         senderId: auth.UserId,
                         receiverId: clickedUser.currUserId,
                       });
-                    }, 1000);
-                    setMsg(e.target.value);
+
+                      timer.current = setTimeout(() => {
+                        socket.emit("stop-typing", {
+                          senderId: auth.UserId,
+                          receiverId: clickedUser.currUserId,
+                        });
+                      }, 1000);
+                      setMsg(e.target.value);
                     }}
-                  value={Msg}
-                />
-                <button onClick={handleSend}>Send</button>
-                          <div className = "audio-div" onClick={()=>{
-                              if(isRecording){
-                                  stopAudioRecording();
-                              }else {
-                                  startAudioRecording();
-                              }
-                          }}> { 
-                          isRecording ?
-                          <i class="fa-solid fa-stop"></i>
-                          :<i className="fa-solid fa-microphone"></i>}
-                           </div>        
-                         
+                    disabled={isRecording}
+                    value={Msg}
+                  />
+                  <button onClick={handleSend}>Send</button>
+                  {Msg === "" && (
+                    <div
+                      className="audio-div"
+                      onClick={() => {
+                        if (isRecording) {
+                          stopAudioRecording();
+                        } else {
+                          startAudioRecording();
+                        }
+                      }}
+                    >
+                      {" "}
+                      {isRecording ? (
+                        <i class="fa-solid fa-stop"></i>
+                      ) : (
+                        <i className="fa-solid fa-microphone"></i>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-
             </div>
           )}
           {!auth.userClicked && (

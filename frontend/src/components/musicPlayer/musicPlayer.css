@@ -1,0 +1,42 @@
+.voice-message{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:8px;
+}
+
+.voice-duration{
+    width:70px;
+    font-size:13px;
+}
+.play-button{
+   width:32px;
+   height:32px;
+   font-size:12px;
+   border-radius:50%;
+   border:none;
+   cursor:pointer;
+  transition:all 0.3s;
+}
+.play-button:hover{
+    transform:scale(1.01);
+}
+.playback-speed{
+    user-select:none;
+    width:1.5rem;
+    font-size:14px;
+    cursor:pointer;
+}
+.waveform{
+    display:flex;
+    align-items:center;
+    gap:2px;
+    margin-left:6px;
+      transition: background-color .15s linear;
+}
+
+.bar{
+    width:3px;
+    background:white;
+    border-radius:999px;
+}

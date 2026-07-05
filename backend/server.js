@@ -8,7 +8,7 @@ import cors from "cors";
 import { setStatusOnline } from "./controller/user.controller.js";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
-dotenv.config();
+dotenv.config();  
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -58,7 +58,7 @@ io.on("connection", (socket) => {
         await Message.updateMany({
              senderId,
              receiverId
-        },{$set:{seen:true}});
+        },{$set:{seen:true}});       
         
         const senderSocketId = onlineUser[senderId];
         if(senderSocketId){
@@ -75,7 +75,8 @@ io.on("connection", (socket) => {
       senderId: data.senderId,
       receiverId: data.receiverId,
       message: data.message,
-      imageUrl:data.image
+      imageUrl:data.image,
+      audioUrl:data.audio
     });
     await User.updateOne(
       { _id: data.senderId },
@@ -86,7 +87,7 @@ io.on("connection", (socket) => {
       { $set: { lastMessage: data.message } },
     );
 
-    await newMessage.save();
+     await newMessage.save();
      const receiverSocketId = onlineUser[data.receiverId];
      const senderSocketId = onlineUser[data.senderId];
      
