@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Group from "../models/group.model.js";
 import Message from "../models/message.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -78,6 +79,120 @@ export const audioUpload = async(req,res)=>{
 
   }catch(err){
     return res.status(500).json({msg:'error at audio upload endpoint',err});
+  }
+}
+export const getGroupMessages = async(req,res)=>{
+  try{
+      
+     const {groupId } = req.params;
+
+     if(!groupId) return res.status(404).json({msg:"please provide  valid group id"});
+
+     const messages = await Message.find({groupId : groupId});
+     return res.status(200).json({msg:"group nessage fetched" , messages});
+     
+  }catch(err){
+    return res.status(500).json({msg:"internal server error" , err : err});
+  }
+}
+export const removeGroupMember = async(req,res)=>{
+   try{
+       const {memberId , groupId } = req.body;
+
+       const userId  = req.user._id;
+
+       const group = await Group.findById(groupId);
+       if(!group){
+           return  res.status(404).json({msg:"no such group found"});
+       }
+
+       if(group.admin !== userId){
+        return res.status(401).json({msg:"you are not permitted ."});
+       }
+       
+       group.members = group.members.filter(m => m === memberId);
+
+       return res.status(201).json({msg:"user removed successfully"});
+
+   }catch(err){
+    return res.status(500).json({msg:"internal server error" , err});
+   }
+}
+export const addGroupMember = async(req,res)=>{
+  try{
+      const {memberId , groupId } = req.body;
+      const userId  = req.user._id;
+
+      const group = await Group.findById(groupId);
+
+      if(!group ){
+        return res.status(404).json({msg:"group not found"});
+      }
+      if(group.admin !== userId){
+        return res.status(401).json({msg :"your are not permitted to add members"});
+      }
+
+      group.members = [...group.members,memberId];
+
+      await group.save();
+
+      return res.status(200).json({msg:"member added successfully"});
+  }catch(err){
+    return res.status(500).json({msg:"internal server error"});
+  }
+}
+export const leaveGroup = async(req , res)=>{
+  try{
+      const {groupId , memberId } = req.body;
+
+      if(!groupId || memberId) return res.status(400).json({msg:"please provide all details"});
+
+
+      const group = await Group.findById(groupId);
+
+      group.members = group.members.filter( m =>{
+            return m === memberId;
+      });
+
+      group.save();
+
+      return res.status(200).json({msg : "members updated successfully" });
+  }catch(err){
+    return res.status(500).json({msg:"internal sever error"});
+  }
+}
+export const myGroups = async(req,res)=>{
+  try{
+       const {memberId} = req.body;
+
+       if(!memberId){
+        return res.status(400).json({msg:"please provide member id"});
+       }
+
+       const groups = await Group.find({members:{$in:[memberId]}});
+
+
+       return res.status(201).json({msg:"groups found" , groups })
+  }catch(err){
+    return res.status(500).json({msg:"internal server error",err});
+  }
+}
+export const createGroup = async( req , res ) =>{ 
+   try{
+    const {name , members } = req.body;
+
+    if(!name || !members)return res.status(400).json({msg:"please provide fell details"});
+
+    const new_group = new Group({
+       name:name,
+       admin:req.user._id,
+       members:[...members , req.user._id],
+    });
+    
+    await new_group.save();
+    return res.status(200).json({msg:"group created" , group:new_group});
+  }catch(err){
+    return res.status(500).json({ msg : "internal error" ,err});
   }
 }
 export const getCurrUser = async (req, res) => {
@@ -209,12 +324,14 @@ export const login = async (req, res) => {
         msg: "wrong password",
       });
     }
+    
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
     return res.status(200).json({
       token: token,
       userId: user._id,
+      profileImage : user.profilePic
     });
   } catch (err) {
     return res.status(500).json({

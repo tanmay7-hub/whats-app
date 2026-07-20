@@ -22,7 +22,7 @@ export const protect = async(req,res,next)=>{
     }catch(err){
         return res.status(500).json({
             msg:"error at auth middleware",
-            er:err
+            err:err
         });
     }
 }

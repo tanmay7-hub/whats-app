@@ -8,7 +8,7 @@ import cors from "cors";
 import { setStatusOnline } from "./controller/user.controller.js";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
-dotenv.config();  
+dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -16,6 +16,7 @@ const io = new Server(server, {
 });
 const onlineUser = {};
 const socketToUser = {};
+
 io.on("connection", (socket) => {
   console.log(`socket connected :${socket.id}`);
 
@@ -46,37 +47,100 @@ io.on("connection", (socket) => {
         });
       }
     }
-   
-   
+
     io.emit("refresh-users");
   });
-  socket.on("chat-opened",async(data)=>{
-        const senderId   = data.senderId;// saloni
-        const receiverId = socketToUser[socket.id]; //tanmay
-        console.log(senderId);
-        console.log(receiverId);
-        await Message.updateMany({
-             senderId,
-             receiverId
-        },{$set:{seen:true}});       
-        
-        const senderSocketId = onlineUser[senderId];
-        if(senderSocketId){
-            // console.log("event emiited for sender");
-            socket.to(senderSocketId).emit("update-seen",{
-             senderId,
-             receiverId
-            });
-        }
+  socket.on("chat-opened", async (data) => {
+    const senderId = data.senderId; // saloni
+    const receiverId = socketToUser[socket.id]; //tanmay
+    await Message.updateMany(
+      {
+        senderId,
+        receiverId,
+      },
+      { $set: { seen: true } },
+    );
 
+    const senderSocketId = onlineUser[senderId];
+    if (senderSocketId) {
+      // console.log("event emiited for sender");
+      socket.to(senderSocketId).emit("update-seen", {
+        senderId,
+        receiverId,
+      });
+    }
   });
-  socket.on("msg-send", async (data) => { 
+  socket.on("emoji-reaction", async (data) => {
+    const userId = socketToUser[socket.id];
+    const msg = await Message.findById(data.messageId);
+  
+    const existingReaction = await msg.reactions.find(
+      (r) => r.userId.toString() === userId,
+    );
+
+    if (!existingReaction) {
+      msg.reactions.push({
+        userId,
+        emoji: data.emoji,
+      });
+    } else if (existingReaction.emoji === data.emoji) {
+      msg.reactions = msg.reactions.filter(
+        (r) => r.userId.toString() !== userId,
+      );
+    } else {
+      existingReaction.emoji = data.emoji;
+    }
+
+    await msg.save();
+    
+    const user1 = onlineUser[msg.senderId];
+    const user2  = onlineUser[msg.receiverId];
+    console.log(msg);
+   if(user1) io.to(user1).emit("reaction-updated", {
+      messageId:msg._id,
+      reactions: msg.reactions,
+    });
+
+   if(user2) io.to(user2).emit("reaction-updated", {
+      messageId:msg._id,
+      reactions: msg.reactions,
+    });
+  });
+  socket.on("delete-message", async (data) => {
+    const { msgId } = data;
+    console.log(data);
+    const msg = await Message.findById(msgId);
+    if (!msg || msg.deletedForEveryone) return;
+
+    const userId = socketToUser[socket.id];
+    if (msg.senderId.toString() !== userId) {
+      return;
+    }
+
+    const receiverId = msg.receiverId;
+    await Message.updateOne(
+      { _id: msgId },
+      { $set: { deletedforEveryone: true } },
+    );
+    const receiverSocketId = onlineUser[msg.receiverId];
+
+    if (receiverSocketId) {
+      socket.to(receiverSocketId).emit("message-deleted", {
+        msgId,
+      });
+    }
+    socket.emit("message-deleted", {
+      msgId,
+    });
+  });
+  socket.on("msg-send", async (data) => {
     const newMessage = new Message({
       senderId: data.senderId,
       receiverId: data.receiverId,
       message: data.message,
-      imageUrl:data.image,
-      audioUrl:data.audio
+      imageUrl: data.image,
+      audioUrl: data.audio,
+      replyTo: data.replyTo,
     });
     await User.updateOne(
       { _id: data.senderId },
@@ -87,21 +151,20 @@ io.on("connection", (socket) => {
       { $set: { lastMessage: data.message } },
     );
 
-     await newMessage.save();
-     const receiverSocketId = onlineUser[data.receiverId];
-     const senderSocketId = onlineUser[data.senderId];
-     
+    await newMessage.save();
+    const receiverSocketId = onlineUser[data.receiverId];
+    const senderSocketId = onlineUser[data.senderId];
+
     io.to(senderSocketId).emit("msg-sent", {
-        ...newMessage.toObject(),
-        delivered: receiverSocketId ? true:false 
+      ...newMessage.toObject(),
+      delivered: receiverSocketId ? true : false,
     });
 
-    if (receiverSocketId ) {
-        console.log("received msg in backend")
-        io.to(receiverSocketId).emit("receive-message", newMessage);
-        
+    if (receiverSocketId) {
+      console.log("received msg in backend");
+      io.to(receiverSocketId).emit("receive-message", newMessage);
     }
-  });
+  }); 
   socket.on("msg-delivered", async (data) => {
     await Message.updateOne(
       { _id: data.messageId },
@@ -141,7 +204,6 @@ io.on("connection", (socket) => {
     io.emit("refresh-users");
   });
 });
-
 const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());

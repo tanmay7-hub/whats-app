@@ -7,6 +7,10 @@ import {
   getCurrUser,
 } from "../action/auth.action.js";
 const initialState = {
+  loggedInUser:{
+    profilePic:"https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+    
+  },
   isTokenThere: false,
   token: undefined,
   isLoading: false,
@@ -43,6 +47,24 @@ const counterSlice = createSlice({
           msg.delivered = true;
         }
       });
+    },
+    deleteMessage:(state , action)=>{
+       state.currChat.forEach((msg)=>{
+          if(msg._id == action.payload.msgId){
+             msg.deletedforEveryone = true;
+          }
+       });
+    },
+    updateReaction:(state,action)=>{
+          const {messageId , reactions} = action.payload;
+
+          const msg = state.currChat.find(m => m._id === messageId);
+          
+          if(msg){
+            msg.reactions = reactions;
+          }
+
+
     },
     UnreadIncrement:(state,action)=>{
            const {senderId} = action.payload;
@@ -81,6 +103,7 @@ const counterSlice = createSlice({
         state.isLoading = false;
         state.isTokenThere = true;
         state.isLoggedIn = true;
+        state.loggedInUser.profilePic = action.payload.profileImage;
         state.UserId = action.payload.userId;
         console.log(state);
       })
@@ -155,7 +178,9 @@ export const {
   addMessage,
   updateDeliveryStatus,
   updateMessageSeenStatus,
-  UnreadIncrement
+  UnreadIncrement,
+  deleteMessage,
+  updateReaction
 } = counterSlice.actions;
 
 export default counterSlice.reducer;
