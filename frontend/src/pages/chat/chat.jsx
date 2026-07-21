@@ -387,19 +387,6 @@ function Chat() {
     };
   }, []);
 
-  // useEffect(()=>{
-  //    const handleClickOutside =  (e)=>{
-  //       if(createGroupRef && !createGroupRef.current.contains(e.target)){
-  //           setShowCreateGroup(false);
-  //       }
-
-  //       document.addEventListener("mousedown",handleClickOutside);
-
-  //       return ()=>{
-  //         document.removeEventListener("mousedown",handleClickOutside);
-  //       }
-  //    }
-  // },[])
   const logout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -605,7 +592,7 @@ function Chat() {
                                 <div className="reply-text">
                                   {m.replyTo.message.length > 0
                                     ? m.replyTo.message
-                                    : m.replyTo.audioUrl == null
+                                    : m.replyTo.type != "audio"
                                       ? "📷 Photo"
                                       : "🎵 Voice Message"}
                                 </div>

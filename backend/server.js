@@ -10,7 +10,7 @@ import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 dotenv.config();
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app); 
 const io = new Server(server, {
   cors: { origin: "*" },
 });

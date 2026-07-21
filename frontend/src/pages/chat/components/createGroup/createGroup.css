@@ -1,7 +1,7 @@
 .createGroupDiv{
    position:absolute;
-   width:70%;
-   height:93%;
+   width:60%;
+   height:80%;
    background:rgba(221, 231, 221, 0.733);
    backdrop-filter:blur(10px);
    border-radius:1.4rem;
@@ -13,7 +13,7 @@
 .mainContainer{
     display:flex;
     width:100%;
-    height:100%;
+    height:85%;
     flex-direction:row;
 }
 .leftSide{
@@ -26,12 +26,33 @@
 .profilePhotodiv{
     height:13rem;
     width:13rem;
-    background-color:aqua;
     border-radius:50%;
 }
 
+
+.groupNameDiv{
+    margin-top:15px;
+}
+.groupNameDiv > input{
+      padding:10px;
+      border:none;
+      outline:none;
+      margin-top:8px;
+      border-radius:12px;
+      font-size:1.1rem;
+}
+.profilePhoto {
+     height:100%;
+     width:100%;
+     object-fit :cover; 
+}
 .rightSide{
   flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  justify-content:center;
+  align-items:center;
 }
 .createGroupbutton{
   margin:auto;
@@ -47,4 +68,73 @@
 }
 .createGroupbutton:hover{
     transform:scale(1.01);
+}
+/* right side */
+
+.selectedUser{
+    width:80%;
+    height:20%;
+    padding:5px;
+    border-radius:18px;
+    display:flex;
+    flex-direction:row;
+    flex-wrap:wrap;
+    gap:7px;
+    overflow-y:scroll;
+    /* background-color:rgba(243, 218, 78, 0.568); */
+}
+.selectedUser::-webkit-scrollbar{
+    display:none;
+}
+.UsersList{
+  width:80%;
+  height:60%;
+  padding:10px;
+  border-radius:18px;
+  background-color: #524e4e49;
+  overflow-y:scroll;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.UsersList::-webkit-scrollbar{
+    display:none;
+}
+.selectedUserSpan{
+    display:flex;
+    flex-direction:row;
+    background-color:white;
+    padding:5px;
+    border-radius:12px;
+    transition:all 0.3s;
+    cursor:pointer;
+}
+.selectedUserSpan:hover{
+    color:rgb(216, 30, 30);
+    transform:scale(1.1);
+}
+.selectedUserSpan:hover > p{
+    transform:scale(1.1);
+ 
+}
+.filteredUserDiv{
+    width:100%;
+    display:flex;
+    cursor:pointer;
+    border-radius:15px;
+    padding:5px;
+    flex-direction:row;
+    align-items:center;
+}
+
+.filteredUserDiv:hover{
+    background-color:#f0eeee5d;
+}
+
+.filteredUserDiv >img {
+    height :65px;
+    width :65px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:10px;
 }
