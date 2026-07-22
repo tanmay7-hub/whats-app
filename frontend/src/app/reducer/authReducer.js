@@ -9,7 +9,7 @@ import {
 const initialState = {
   loggedInUser:{
     profilePic:"https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
-    
+    userId:undefined,
   },
   isTokenThere: false,
   token: undefined,
@@ -104,8 +104,9 @@ const counterSlice = createSlice({
         state.isTokenThere = true;
         state.isLoggedIn = true;
         state.loggedInUser.profilePic = action.payload.profileImage;
+        state.loggedInUser.userId = action.payload.userId;
         state.UserId = action.payload.userId;
-        console.log(state);
+       
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;

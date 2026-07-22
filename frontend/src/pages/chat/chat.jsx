@@ -102,7 +102,7 @@ function Chat() {
 
     formData.append("image", Image);
     const res = await clientServer.post("/upload-image", formData);
-    console.log("res:", res.data);
+    
     return res.data.imageUrl;
   };
   const getAudioUrl = async () => {
@@ -110,11 +110,10 @@ function Chat() {
     formData.append("audio", audioBlob);
     const res = await clientServer.post("/upload-audio", formData);
 
-    console.log(res.data);
     return res.data.audioUrl;
   };
   const handleDeleteForEveryone = async () => {
-    console.log(menuMessage);
+  
     socket.emit("delete-message", {
       msgId: menuMessage._id,
     });
@@ -361,9 +360,7 @@ function Chat() {
   // msg seen update
   useEffect(() => {
     socket.on("update-seen", async (data) => {
-      console.log("udpate called");
-      console.log("sender:", typeof clickedUser.currUserId);
-      console.log("receiver:", typeof data.receiverId);
+      
       if (data.receiverId === clickedUser.currUserId) {
         dispatch(updateMessageSeenStatus(data));
       }
@@ -484,6 +481,7 @@ function Chat() {
                 if (user._id !== auth.UserId)
                   return (
                     <div
+                     key = {user._id}
                       onClick={() => {
                         dispatch(setChatNull());
                         setMsg("");
@@ -558,6 +556,7 @@ function Chat() {
                     return (
                       <>
                         <div
+                          key = {m._id}
                           onContextMenu={(e) => {
                             if (m.deletedforEveryone) return;
                             e.preventDefault();
@@ -630,14 +629,17 @@ function Chat() {
                             </div>
                           )}
                           {!m.deletedforEveryone && m.reactions?.length > 0 && (
-                            <div className="reaction-container">
+                            <div 
+                            className="reaction-container"
+
+                            >
                               {Object.entries(
                                 m.reactions.reduce((acc, r) => {
                                   acc[r.emoji] = (acc[r.emoji] || 0) + 1;
                                   return acc;
                                 }, {}),
                               ).map(([emoji, count]) => (
-                                <span>
+                                <span >
                                   {emoji} {count}
                                 </span>
                               ))}
@@ -679,9 +681,10 @@ function Chat() {
                     }}
                     className="reaction-div"
                   >
-                    {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji) => {
+                    {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji, idx) => {
                       return (
                         <div
+                          key = {idx}
                           onClick={() => {
                             handleReaction(menuMessage, emoji);
                           }}

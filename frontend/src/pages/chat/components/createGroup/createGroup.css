@@ -64,6 +64,9 @@
   box-shadow:0 8px 30px rgba(0,0,0,.15);
   border-radius:20px;  
   transition:all 0.3s;
+  border:none;
+  outline:none;
+  cursor:pointer;
   
 }
 .createGroupbutton:hover{
@@ -73,7 +76,7 @@
 
 .selectedUser{
     width:80%;
-    height:20%;
+    /* height:20%; */
     padding:5px;
     border-radius:18px;
     display:flex;

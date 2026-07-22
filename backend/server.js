@@ -10,7 +10,7 @@ import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 dotenv.config();
 const app = express();
-const server = http.createServer(app); 
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
@@ -51,8 +51,8 @@ io.on("connection", (socket) => {
     io.emit("refresh-users");
   });
   socket.on("chat-opened", async (data) => {
-    const senderId = data.senderId; // saloni
-    const receiverId = socketToUser[socket.id]; //tanmay
+    const senderId = data.senderId; 
+    const receiverId = socketToUser[socket.id]; 
     await Message.updateMany(
       {
         senderId,
@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
 
     const senderSocketId = onlineUser[senderId];
     if (senderSocketId) {
-      // console.log("event emiited for sender");
+    
       socket.to(senderSocketId).emit("update-seen", {
         senderId,
         receiverId,
@@ -95,7 +95,7 @@ io.on("connection", (socket) => {
     
     const user1 = onlineUser[msg.senderId];
     const user2  = onlineUser[msg.receiverId];
-    console.log(msg);
+  
    if(user1) io.to(user1).emit("reaction-updated", {
       messageId:msg._id,
       reactions: msg.reactions,
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
   });
   socket.on("delete-message", async (data) => {
     const { msgId } = data;
-    console.log(data);
+   
     const msg = await Message.findById(msgId);
     if (!msg || msg.deletedForEveryone) return;
 
@@ -161,7 +161,7 @@ io.on("connection", (socket) => {
     });
 
     if (receiverSocketId) {
-      console.log("received msg in backend");
+    
       io.to(receiverSocketId).emit("receive-message", newMessage);
     }
   }); 
