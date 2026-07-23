@@ -196,6 +196,7 @@ const counterSlice = createSlice({
            state.isError = false;
            state.isLoading = false;
            state.allGroups = [...state.allGroups , action.payload.group];
+           
       })
       .addCase(createGroup.rejected , (state , action)=>{
           state.isError = true;

@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {createGroup} from "../../../../app/action/auth.action.js"
 import "./createGroup.css";
-export function CreateGroup({ closeModal }) {
+export function CreateGroup({ closeModal  , changeTab}) {
   const [profilePhoto, setProfilePhoto] = useState(
     "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
   );
@@ -17,16 +17,19 @@ export function CreateGroup({ closeModal }) {
  
 
 
-  const handleCreateGroup = ()=>{
+  const handleCreateGroup = async()=>{
        const data = {
           name : groupName ,
-          members : selectedUsers ,
+          members : selectedUsers.map(user => user._id) ,
           groupImage: profilePhoto,
         };
 
-        dispatch(createGroup(data));
-        closeModal();
-      
+        const res = await dispatch(createGroup(data));
+        if(createGroup.fulfilled.match(res)){
+          closeModal();
+          changeTab(1);
+        } 
+        
   };
   const filteredUsers = users.filter(
     (user) => !selectedUsers.some((selected) => selected._id === user._id),

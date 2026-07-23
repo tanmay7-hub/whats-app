@@ -72,25 +72,29 @@ export const createGroup = createAsyncThunk(
  "auth/createGroup",
  async(data, thunkAPI)=>{
      try{
-         const res = await clientServer.post("group/createGroup",{data , headers:{
-              authorization: "bearer " + localStorage.getItem("token"),
-         }});
+         const res = await clientServer.post("group/createGroup",data , {
+             headers:{ authorization: "bearer " + localStorage.getItem("token"),}
+         });
+         console.log(res);
          return thunkAPI.fulfillWithValue(res.data);
      }catch(err){
+      console.log(err);
          return thunkAPI.rejectWithValue(err.response);
      }
  }
-)
+);
 export const getAllGroups = createAsyncThunk(
   "auth/getAllUser",
   async(data , thunkAPI) =>{
      try{
        const res = await clientServer.get("group/my-groups" , {
-         memberId : data.userId
+         headers:{
+             authorization: "bearer " + localStorage.getItem("token"),
+         }
        });
        return thunkAPI.fulfillWithValue(res.data);
      }catch(err){
-       return thunkAPI.rejectWithValue(err.response);
+       return thunkAPI.rejectWithValue(err.response.data);
      }
   }
 )

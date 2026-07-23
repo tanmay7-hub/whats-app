@@ -270,7 +270,7 @@ function Chat() {
   useEffect(() => {
     socket.on("refresh-users",async() => {
       await dispatch(getUser());
-      await dispatch(getAllGroups({userId : auth.loggedInUser.userId}));
+      await dispatch(getAllGroups());
     });
     return () => {
       socket.off("refresh-users");
@@ -567,11 +567,11 @@ function Chat() {
                         <p> {group.name}</p>
                         <p
                           style={{
-                            fontWeight: user.unreadCount > 0 ? "600" : "400",
-                            color: user.unreadCount > 0 ? "#0f0101e8" : "#777",
+                            fontWeight: group.unreadCount > 0 ? "600" : "400",
+                            color: group.unreadCount > 0 ? "#0f0101e8" : "#777",
                           }}
                         >
-                          {user.lastMessage}
+                          {group.lastMessage}
                         </p>
                       </div>
                       {group.unreadCount > 0 && (
@@ -899,6 +899,9 @@ function Chat() {
             <CreateGroup
               closeModal={() => {
                 setShowCreateGroup(false);
+              }}
+              changeTab ={(num)=>{
+                 setCurrTab(num);
               }}
             />
           </div>

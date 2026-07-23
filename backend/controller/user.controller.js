@@ -36,23 +36,25 @@ export const getAllUser = async (req, res) => {
 };
 export const myGroups = async(req,res)=>{
   try{
-       const {memberId} = req.body;
+
+       const memberId = req.user.id;
        if(!memberId){
         return res.status(400).json({msg:"please provide member id"});
        }
        const groups = await Group.find({members:{$in:[memberId]}});
        const groupWithUnreadCount = await Promise.all(
             groups.map(async(group)=>{
-              const unreadMessage = await Message.countDocuments({
+              const unreadCount = await Message.countDocuments({
                  groupId : group._id,
                  seenBy : {$ne :memberId},
                  senderId : {$ne : memberId},
               });
-              return {...group.toObject() , unreadMessage};
+              return {...group.toObject() , unreadCount};
             }) 
        );
-       return res.status(200).json({ groups : groupWithUnreadCount });
+       return res.status(200).json({ groups  });
   }catch(err){
+    console.log(err);
     return res.status(500).json({msg:"internal server error",err});
   }
 };
@@ -193,7 +195,7 @@ export const createGroup = async( req , res ) =>{
        name:name,
        admin:req.user._id,
        groupImage,
-       members:[...members , req.user._id],
+       members:[...members , req.user.id],
     });
     
     await new_group.save();
