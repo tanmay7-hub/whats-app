@@ -61,13 +61,39 @@ export const getUser = createAsyncThunk(
           authorization: "bearer " + localStorage.getItem("token"),
         },
       });
-
+      
       return thunkAPI.fulfillWithValue(res.data);
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response);
     }  
   },
 );
+export const createGroup = createAsyncThunk(
+ "auth/createGroup",
+ async(data, thunkAPI)=>{
+     try{
+         const res = await clientServer.post("group/createGroup",{data , headers:{
+              authorization: "bearer " + localStorage.getItem("token"),
+         }});
+         return thunkAPI.fulfillWithValue(res.data);
+     }catch(err){
+         return thunkAPI.rejectWithValue(err.response);
+     }
+ }
+)
+export const getAllGroups = createAsyncThunk(
+  "auth/getAllUser",
+  async(data , thunkAPI) =>{
+     try{
+       const res = await clientServer.get("group/my-groups" , {
+         memberId : data.userId
+       });
+       return thunkAPI.fulfillWithValue(res.data);
+     }catch(err){
+       return thunkAPI.rejectWithValue(err.response);
+     }
+  }
+)
 export const getChat = createAsyncThunk(
   "auth/getChat",
   async (data, thunkAPI) => {

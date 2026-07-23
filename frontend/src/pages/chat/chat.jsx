@@ -7,6 +7,7 @@ import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
 import { CreateGroup } from "./components/createGroup/CreateGroup.jsx";
 import {
   getUser,
+  getAllGroups,
   getChat,
   sendMessage,
   getCurrUser,
@@ -47,6 +48,7 @@ function Chat() {
   const animationRef = useRef(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef(null);
+  const [currTab, setCurrTab] = useState(0);
   const [replyMessage, setReplyMessage] = useState(null);
   const [menuMessage, setMenuMessage] = useState(null);
   const [menuPosition, setMenuPosition] = useState(null);
@@ -60,9 +62,14 @@ function Chat() {
   const AllMessages = auth.currChat;
   const timer = useRef(null);
 
+  
+  const tabs = ["Chats", "Groups", "Calls"];
+
+  const groups = auth.allGroups;
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(search.toLowerCase()),
   );
+  
 
   const handleReply = () => {
     setReplyMessage(menuMessage);
@@ -102,7 +109,7 @@ function Chat() {
 
     formData.append("image", Image);
     const res = await clientServer.post("/upload-image", formData);
-    
+
     return res.data.imageUrl;
   };
   const getAudioUrl = async () => {
@@ -113,7 +120,6 @@ function Chat() {
     return res.data.audioUrl;
   };
   const handleDeleteForEveryone = async () => {
-  
     socket.emit("delete-message", {
       msgId: menuMessage._id,
     });
@@ -240,20 +246,11 @@ function Chat() {
       setMenuPosition(null);
       setMenuMessage(null);
     };
-    //  const container =
-    //   document.querySelector(
-    //     ".messages-container"
-    //   );
-
-    //  container?.addEventListener(
-    //   "scroll",
-    //   closeMenu
-    //   );
     window.addEventListener("click", closeMenu);
 
     return () => {
       window.removeEventListener("click", closeMenu);
-      // container?.removeEventListener("scroll",closeMenu);
+    
     };
   }, []);
   useEffect(() => {
@@ -269,10 +266,11 @@ function Chat() {
       navigate("/login");
     }
   }, []);
-
+  //all groups and users
   useEffect(() => {
-    socket.on("refresh-users", () => {
-      dispatch(getUser());
+    socket.on("refresh-users",async() => {
+      await dispatch(getUser());
+      await dispatch(getAllGroups({userId : auth.loggedInUser.userId}));
     });
     return () => {
       socket.off("refresh-users");
@@ -360,7 +358,6 @@ function Chat() {
   // msg seen update
   useEffect(() => {
     socket.on("update-seen", async (data) => {
-      
       if (data.receiverId === clickedUser.currUserId) {
         dispatch(updateMessageSeenStatus(data));
       }
@@ -476,12 +473,23 @@ function Chat() {
                 </div>
               )}
             </div>
+            <div className="switching-tab">
+              {tabs.map((tab, index) => (
+                <div
+                  key={tab}
+                  className={`tab ${currTab === index ? "active" : ""}`}
+                  onClick={() => setCurrTab(index)}
+                >
+                  {tab}
+                </div>
+              ))}
+            </div>
             <div className="chat-Users-div">
-              {filteredUsers.map((user) => {
+              { currTab === 0 && filteredUsers.map((user) => {
                 if (user._id !== auth.UserId)
                   return (
                     <div
-                     key = {user._id}
+                      key={user._id}
                       onClick={() => {
                         dispatch(setChatNull());
                         setMsg("");
@@ -525,6 +533,55 @@ function Chat() {
                     </div>
                   );
               })}
+              { currTab === 1 && groups.map((group) =>{
+                   return (
+                    <div
+                      key={group._id}
+                      onClick={() => {
+                        dispatch(setChatNull());
+                        setMsg("");
+                        setImage(null);
+                        setImagePreview(null);
+                        dispatch(
+                          setCurrUser({
+                            currUserLastSeen: user.lastSeen,
+                            currUserId: user._id,
+                            currUserProfilePic: user.profilePic,
+                            currUserIsOnline: user.isOnline,
+                            currUserName: user.username,
+                          }),
+                        );
+                        socket.emit("chat-opened", {
+                          senderId: user._id,
+                        });
+                        dispatch(getChat({ reqId: user._id }));
+                      }}
+                      className="user-side-div"
+                    >
+                      <div className="profile-wrapper">
+                        <img src={group.groupImage} />
+                        
+                      </div>
+
+                      <div className="userName-chat-div">
+                        <p> {group.name}</p>
+                        <p
+                          style={{
+                            fontWeight: user.unreadCount > 0 ? "600" : "400",
+                            color: user.unreadCount > 0 ? "#0f0101e8" : "#777",
+                          }}
+                        >
+                          {user.lastMessage}
+                        </p>
+                      </div>
+                      {group.unreadCount > 0 && (
+                        <div className="unread-badge">{group.unreadCount}</div>
+                      )}
+                    </div>
+                  );
+              })
+
+              }
             </div>
           </div>
           {auth.userClicked && (
@@ -556,7 +613,7 @@ function Chat() {
                     return (
                       <>
                         <div
-                          key = {m._id}
+                          key={m._id}
                           onContextMenu={(e) => {
                             if (m.deletedforEveryone) return;
                             e.preventDefault();
@@ -629,17 +686,14 @@ function Chat() {
                             </div>
                           )}
                           {!m.deletedforEveryone && m.reactions?.length > 0 && (
-                            <div 
-                            className="reaction-container"
-
-                            >
+                            <div className="reaction-container">
                               {Object.entries(
                                 m.reactions.reduce((acc, r) => {
                                   acc[r.emoji] = (acc[r.emoji] || 0) + 1;
                                   return acc;
                                 }, {}),
                               ).map(([emoji, count]) => (
-                                <span >
+                                <span>
                                   {emoji} {count}
                                 </span>
                               ))}
@@ -684,7 +738,7 @@ function Chat() {
                     {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji, idx) => {
                       return (
                         <div
-                          key = {idx}
+                          key={idx}
                           onClick={() => {
                             handleReaction(menuMessage, emoji);
                           }}
@@ -828,7 +882,9 @@ function Chat() {
                 </div>
               </div>
             </div>
-          )}
+           )
+          }
+         
           {!auth.userClicked && (
             <div className="chat-right-div-initial">
               <img className="chat-wall" src={chatwall} />

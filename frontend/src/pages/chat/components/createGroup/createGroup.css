@@ -2,9 +2,12 @@
    position:absolute;
    width:60%;
    height:80%;
-   background:rgba(221, 231, 221, 0.733);
+   background:rgba(210, 211, 210, 0.733);
    backdrop-filter:blur(10px);
    border-radius:1.4rem;
+   /* background-image:url("../../../../assets/chatWallpaper.jpg");
+   background-size:cover;
+   background-position:center; */
    
    display:flex;
    flex-direction:column;

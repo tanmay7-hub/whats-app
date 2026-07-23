@@ -73,10 +73,10 @@ io.on("connection", (socket) => {
   socket.on("emoji-reaction", async (data) => {
     const userId = socketToUser[socket.id];
     const msg = await Message.findById(data.messageId);
-  
+    
     const existingReaction = await msg.reactions.find(
       (r) => r.userId.toString() === userId,
-    );
+    ); 
 
     if (!existingReaction) {
       msg.reactions.push({
@@ -100,7 +100,7 @@ io.on("connection", (socket) => {
       messageId:msg._id,
       reactions: msg.reactions,
     });
-
+ 
    if(user2) io.to(user2).emit("reaction-updated", {
       messageId:msg._id,
       reactions: msg.reactions,

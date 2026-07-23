@@ -34,6 +34,28 @@ export const getAllUser = async (req, res) => {
     });
   }
 };
+export const myGroups = async(req,res)=>{
+  try{
+       const {memberId} = req.body;
+       if(!memberId){
+        return res.status(400).json({msg:"please provide member id"});
+       }
+       const groups = await Group.find({members:{$in:[memberId]}});
+       const groupWithUnreadCount = await Promise.all(
+            groups.map(async(group)=>{
+              const unreadMessage = await Message.countDocuments({
+                 groupId : group._id,
+                 seenBy : {$ne :memberId},
+                 senderId : {$ne : memberId},
+              });
+              return {...group.toObject() , unreadMessage};
+            }) 
+       );
+       return res.status(200).json({ groups : groupWithUnreadCount });
+  }catch(err){
+    return res.status(500).json({msg:"internal server error",err});
+  }
+};
 export const photoUpload = async(req,res)=>{
     try{     
          if(!req.file){
@@ -161,31 +183,16 @@ export const leaveGroup = async(req , res)=>{
     return res.status(500).json({msg:"internal sever error"});
   }
 }
-export const myGroups = async(req,res)=>{
-  try{
-       const {memberId} = req.body;
-
-       if(!memberId){
-        return res.status(400).json({msg:"please provide member id"});
-       }
-
-       const groups = await Group.find({members:{$in:[memberId]}});
-
-
-       return res.status(201).json({msg:"groups found" , groups })
-  }catch(err){
-    return res.status(500).json({msg:"internal server error",err});
-  }
-}
 export const createGroup = async( req , res ) =>{ 
    try{
-    const {name , members } = req.body;
+    const {name , members  , groupImage } = req.body;
 
-    if(!name || !members)return res.status(400).json({msg:"please provide fell details"});
+    if(!name || !members)return res.status(400).json({msg:"please provide full details"});
 
     const new_group = new Group({
        name:name,
        admin:req.user._id,
+       groupImage,
        members:[...members , req.user._id],
     });
     

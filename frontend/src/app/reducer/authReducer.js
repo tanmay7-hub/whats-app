@@ -5,6 +5,8 @@ import {
   getChat,
   sendMessage,
   getCurrUser,
+  getAllGroups,
+  createGroup
 } from "../action/auth.action.js";
 const initialState = {
   loggedInUser:{
@@ -17,6 +19,8 @@ const initialState = {
   isError: false,
   message: undefined,
   allUser: [],
+  allGroups:[],
+
   UserId: undefined,
   isLoggedIn: true,
   userClicked: false,
@@ -128,6 +132,21 @@ const counterSlice = createSlice({
         state.isError = false;
         state.message = action.payload.data.msg;
       })
+      .addCase(getAllGroups.pending , (state , action)=>{
+          state.isLoading = true;
+          state.isError = false;
+      })
+      .addCase(getAllGroups.fulfilled , (state , action)=>{
+        state.isLoading = false;
+        state.isError = false;
+        state.allGroups = action.payload.groups;
+      })
+      
+      .addCase(getAllGroups.rejected , (state ,action)=>{
+           state.isLoading = false;
+           state.isError = false;
+           state.message = action.payload.msg;
+      })
 
       .addCase(getChat.pending, (state, action) => {
         state.isLoading = true;
@@ -166,9 +185,24 @@ const counterSlice = createSlice({
       })
       .addCase(getCurrUser.rejected, (state, action) => {
         state.isError = true;
-        state.isLoading = true;
+        state.isLoading = false;
         state.message = action.payload.msg;
-      });
+      })
+      .addCase(createGroup.pending , (state , action)=>{
+          state.isError = false;
+          state.isLoading = true;
+      })  
+      .addCase(createGroup.fulfilled , (state , action)=>{
+           state.isError = false;
+           state.isLoading = false;
+           state.allGroups = [...state.allGroups , action.payload.group];
+      })
+      .addCase(createGroup.rejected , (state , action)=>{
+          state.isError = true;
+           state.isLoading = false;
+      })
+
+      
   },
 });
 

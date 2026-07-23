@@ -23,7 +23,7 @@ router.route("/user/getAllUser").get(protect, getAllUser);
 router.route("/upload-image").post(upload.single("image"), photoUpload);
 router.route("/upload-audio").post(upload.single("audio"), audioUpload);
 router.route("/group/create-group").post(protect ,createGroup);
-router.route("/group/my-groups").get(myGroups);
+router.route("/group/createGroup").get(myGroups);
 router.route("/register").post(register);
 router.route("/home").get(home); 
 router.route("/login").post(login);

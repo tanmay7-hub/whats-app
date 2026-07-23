@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {createGroup} from "../../../../app/action/auth.action.js"
 import "./createGroup.css";
 export function CreateGroup({ closeModal }) {
   const [profilePhoto, setProfilePhoto] = useState(
@@ -9,7 +10,7 @@ export function CreateGroup({ closeModal }) {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const createGroupRef = useRef(null);
   
-  
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const loggedInUserId = auth.loggedInUser.userId;
   const users = auth.allUser.filter(user => user._id !== loggedInUserId);
@@ -17,6 +18,14 @@ export function CreateGroup({ closeModal }) {
 
 
   const handleCreateGroup = ()=>{
+       const data = {
+          name : groupName ,
+          members : selectedUsers ,
+          groupImage: profilePhoto,
+        };
+
+        dispatch(createGroup(data));
+        closeModal();
       
   };
   const filteredUsers = users.filter(
@@ -34,7 +43,6 @@ export function CreateGroup({ closeModal }) {
       return [...prev, user];
     });
   };
-
   // closing the create group div
   useEffect(() => {
     const handleClickOutside = (e) => {
