@@ -6,12 +6,14 @@ import {
   sendMessage,
   getCurrUser,
   getAllGroups,
-  createGroup
+  createGroup,
+  getGroupChat,
 } from "../action/auth.action.js";
 const initialState = {
-  loggedInUser:{
-    profilePic:"https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
-    userId:undefined,
+  loggedInUser: {
+    profilePic:
+      "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+    userId: undefined,
   },
   isTokenThere: false,
   token: undefined,
@@ -19,28 +21,20 @@ const initialState = {
   isError: false,
   message: undefined,
   allUser: [],
-  allGroups:[],
+  allGroups: [],
 
   UserId: undefined,
   isLoggedIn: true,
   userClicked: false,
-  clickedUser: {
-    currUserLastSeen: null,
-    currUserId: undefined,
-    currUserProfilePic:
-      "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
-    currUserName: undefined,
-    currUserIsOnline: false,
-  },
   currentConversation: {
-    type: null,      // "user" | "group"
+    type: null, // "user" | "group"
     id: null,
     name: "",
     profilePic: "",
     isOnline: false,
     lastSeen: null,
     members: [],
-},
+  },
   currChat: [],
 };
 const counterSlice = createSlice({
@@ -61,49 +55,59 @@ const counterSlice = createSlice({
         }
       });
     },
-    deleteMessage:(state , action)=>{
-       state.currChat.forEach((msg)=>{
-          if(msg._id == action.payload.msgId){
-             msg.deletedforEveryone = true;
-          }
-       });
+    deleteMessage: (state, action) => {
+      state.currChat.forEach((msg) => {
+        if (msg._id == action.payload.msgId) {
+          msg.deletedforEveryone = true;
+        }
+      });
     },
-    updateReaction:(state,action)=>{
-          const {messageId , reactions} = action.payload;
+    updateReaction: (state, action) => {
+      const { messageId, reactions } = action.payload;
 
-          const msg = state.currChat.find(m => m._id === messageId);
-          
-          if(msg){
-            msg.reactions = reactions;
-          }
+      const msg = state.currChat.find((m) => m._id === messageId);
 
-
+      if (msg) {
+        msg.reactions = reactions;
+      }
     },
-    UnreadIncrement:(state,action)=>{
-           const {senderId} = action.payload;
+    UnreadIncrement: (state, action) => {
+      const { senderId } = action.payload;
 
-           state.allUser = state.allUser.map((user)=>{
-              return   user._id == senderId ? {...user , unreadCount : user.unreadCount + 1,lastMessage:action.payload.message}:user;
-           })
+      state.allUser = state.allUser.map((user) => {
+        return user._id == senderId
+          ? {
+              ...user,
+              unreadCount: user.unreadCount + 1,
+              lastMessage: action.payload.message,
+            }
+          : user;
+      });
+    },
+    groupUnreadIncrement: (state, action) => {
+      const { groupId, message } = action.payload;
+
+      state.allGroups = state.allGroups.map((group) => {
+        return group._id === groupId
+          ? {
+              ...group,
+              unreadCount: group.unreadCount + 1,
+              lastMessage: message,
+            }
+          : group;
+      });
     },
     updateMessageSeenStatus: (state, action) => {
       const { senderId, receiverId } = action.payload;
 
       state.currChat.forEach((msg) => {
         if (msg.senderId === senderId && msg.receiverId === receiverId) {
-             msg.seen = true;
+          msg.seen = true;
         }
       });
     },
-    setCurrUser: (state, action) => {
-      state.clickedUser = {
-        ...state.clickedUser,
-        currUserLastSeen: action.payload.currUserLastSeen,
-        currUserIsOnline: action.payload.currUserIsOnline,
-        currUserName: action.payload.currUserName,
-        currUserProfilePic: action.payload.currUserProfilePic,
-        currUserId: action.payload.currUserId,
-      };
+    setCurrentConversation: (state, action) => {
+      state.currentConversation = action.payload;
       state.userClicked = true;
     },
   },
@@ -119,7 +123,6 @@ const counterSlice = createSlice({
         state.loggedInUser.profilePic = action.payload.profileImage;
         state.loggedInUser.userId = action.payload.userId;
         state.UserId = action.payload.userId;
-       
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -141,20 +144,20 @@ const counterSlice = createSlice({
         state.isError = false;
         state.message = action.payload.data.msg;
       })
-      .addCase(getAllGroups.pending , (state , action)=>{
-          state.isLoading = true;
-          state.isError = false;
+      .addCase(getAllGroups.pending, (state, action) => {
+        state.isLoading = true;
+        state.isError = false;
       })
-      .addCase(getAllGroups.fulfilled , (state , action)=>{
+      .addCase(getAllGroups.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.allGroups = action.payload.groups;
       })
-      
-      .addCase(getAllGroups.rejected , (state ,action)=>{
-           state.isLoading = false;
-           state.isError = false;
-           state.message = action.payload.msg;
+
+      .addCase(getAllGroups.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = false;
+        state.message = action.payload.msg;
       })
 
       .addCase(getChat.pending, (state, action) => {
@@ -197,35 +200,46 @@ const counterSlice = createSlice({
         state.isLoading = false;
         state.message = action.payload.msg;
       })
-      .addCase(createGroup.pending , (state , action)=>{
-          state.isError = false;
-          state.isLoading = true;
-      })  
-      .addCase(createGroup.fulfilled , (state , action)=>{
-           state.isError = false;
-           state.isLoading = false;
-           state.allGroups = [...state.allGroups , action.payload.group];
-           
+      .addCase(createGroup.pending, (state, action) => {
+        state.isError = false;
+        state.isLoading = true;
       })
-      .addCase(createGroup.rejected , (state , action)=>{
-          state.isError = true;
-           state.isLoading = false;
+      .addCase(createGroup.fulfilled, (state, action) => {
+        state.isError = false;
+        state.isLoading = false;
+        state.allGroups = [...state.allGroups, action.payload.group];
+      })
+      .addCase(createGroup.rejected, (state, action) => {
+        state.isError = true;
+        state.isLoading = false;
+      })
+      .addCase(getGroupChat.pending, (state) => {
+        state.isLoading = true;
       })
 
-      
+      .addCase(getGroupChat.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currChat = action.payload.messages;
+      })
+
+      .addCase(getGroupChat.rejected, (state) => {
+        state.isLoading = false;
+        state.isError = true;
+      });
   },
 });
 
 export const {
   reset,
-  setCurrUser,
   setChatNull,
   addMessage,
   updateDeliveryStatus,
   updateMessageSeenStatus,
   UnreadIncrement,
+  groupUnreadIncrement,
   deleteMessage,
-  updateReaction
+  updateReaction,
+  setCurrentConversation,
 } = counterSlice.actions;
 
 export default counterSlice.reducer;

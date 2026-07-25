@@ -8,6 +8,7 @@ import cors from "cors";
 import { setStatusOnline } from "./controller/user.controller.js";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
+import Group from "./models/group.model.js";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -51,8 +52,8 @@ io.on("connection", (socket) => {
     io.emit("refresh-users");
   });
   socket.on("chat-opened", async (data) => {
-    const senderId = data.senderId; 
-    const receiverId = socketToUser[socket.id]; 
+    const senderId = data.senderId;
+    const receiverId = socketToUser[socket.id];
     await Message.updateMany(
       {
         senderId,
@@ -63,7 +64,6 @@ io.on("connection", (socket) => {
 
     const senderSocketId = onlineUser[senderId];
     if (senderSocketId) {
-    
       socket.to(senderSocketId).emit("update-seen", {
         senderId,
         receiverId,
@@ -73,10 +73,10 @@ io.on("connection", (socket) => {
   socket.on("emoji-reaction", async (data) => {
     const userId = socketToUser[socket.id];
     const msg = await Message.findById(data.messageId);
-    
+
     const existingReaction = await msg.reactions.find(
       (r) => r.userId.toString() === userId,
-    ); 
+    );
 
     if (!existingReaction) {
       msg.reactions.push({
@@ -92,23 +92,25 @@ io.on("connection", (socket) => {
     }
 
     await msg.save();
-    
+
     const user1 = onlineUser[msg.senderId];
-    const user2  = onlineUser[msg.receiverId];
-  
-   if(user1) io.to(user1).emit("reaction-updated", {
-      messageId:msg._id,
-      reactions: msg.reactions,
-    });
- 
-   if(user2) io.to(user2).emit("reaction-updated", {
-      messageId:msg._id,
-      reactions: msg.reactions,
-    });
+    const user2 = onlineUser[msg.receiverId];
+
+    if (user1)
+      io.to(user1).emit("reaction-updated", {
+        messageId: msg._id,
+        reactions: msg.reactions,
+      });
+
+    if (user2)
+      io.to(user2).emit("reaction-updated", {
+        messageId: msg._id,
+        reactions: msg.reactions,
+      });
   });
   socket.on("delete-message", async (data) => {
     const { msgId } = data;
-   
+
     const msg = await Message.findById(msgId);
     if (!msg || msg.deletedForEveryone) return;
 
@@ -161,10 +163,40 @@ io.on("connection", (socket) => {
     });
 
     if (receiverSocketId) {
-    
       io.to(receiverSocketId).emit("receive-message", newMessage);
     }
-  }); 
+  });
+  socket.on("group-msg-send", async (data) => {
+    const msg = new Message({
+      senderId: data.senderId,
+      groupId: data.groupId,
+      message: data.message,
+      imageUrl: data.image,
+      audioUrl: data.audio,
+      replyTo: data.replyTo,
+    });
+    await msg.save();
+    const group = await Group.findById(data.groupId);
+    await Group.updateOne(
+      { _id: data.groupId },
+      {
+        $set: {
+          lastMessage: data.message,
+        },
+      },
+    );
+    const senderSocket = onlineUser[data.senderId];
+   
+
+    group.members.forEach((member) => {
+      const memberSocket = onlineUser[member.toString()];
+      if (member.toString() != data.senderId) {
+        io.to(memberSocket).emit("receive-group-message", msg);
+      }
+    });
+
+    io.to(senderSocket).emit("msg-sent", msg);
+  });
   socket.on("msg-delivered", async (data) => {
     await Message.updateOne(
       { _id: data.messageId },

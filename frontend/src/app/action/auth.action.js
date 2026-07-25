@@ -1,7 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import clientServer from "../../config/axios.js";
-import socket from "../../sockets/socket.js";
-import { useSelector, useDispatch  } from "react-redux";
 
 
 export const login = createAsyncThunk(
@@ -84,7 +82,7 @@ export const createGroup = createAsyncThunk(
  }
 );
 export const getAllGroups = createAsyncThunk(
-  "auth/getAllUser",
+   "auth/getAllGroups",
   async(data , thunkAPI) =>{
      try{
        const res = await clientServer.get("group/my-groups" , {
@@ -94,10 +92,30 @@ export const getAllGroups = createAsyncThunk(
        });
        return thunkAPI.fulfillWithValue(res.data);
      }catch(err){
-       return thunkAPI.rejectWithValue(err.response.data);
+       return thunkAPI.rejectWithValue(err.response);
      }
   }
-)
+);
+export const getGroupChat = createAsyncThunk(
+    "auth/getGroupChat",
+    async (groupId, thunkAPI) => {
+        try {
+            const res = await clientServer.get(
+                `/group/chat/${groupId}`,
+                {
+                    headers: {
+                        authorization:
+                            "bearer " + localStorage.getItem("token"),
+                    },
+                }
+            );
+
+            return thunkAPI.fulfillWithValue(res.data);
+        } catch (err) {
+            return thunkAPI.rejectWithValue(err.response);
+        }
+    }
+);
 export const getChat = createAsyncThunk(
   "auth/getChat",
   async (data, thunkAPI) => {

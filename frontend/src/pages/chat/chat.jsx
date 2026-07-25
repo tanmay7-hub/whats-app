@@ -11,9 +11,9 @@ import {
   getChat,
   sendMessage,
   getCurrUser,
+  getGroupChat,
 } from "../../app/action/auth.action.js";
 import {
-  setCurrUser,
   setChatNull,
   addMessage,
   updateDeliveryStatus,
@@ -21,6 +21,7 @@ import {
   UnreadIncrement,
   deleteMessage,
   updateReaction,
+  setCurrentConversation,
 } from "../../app/reducer/authReducer.js";
 import MessageContainer from "./components/MessagesContainer/message.jsx";
 import socket from "../../sockets/socket.js";
@@ -58,11 +59,10 @@ function Chat() {
   const createGroupRef = useRef(null);
   const menuRef = useRef(null);
   const users = auth.allUser;
-  const clickedUser = auth.clickedUser;
+  const conversation = auth.currentConversation;
   const AllMessages = auth.currChat;
   const timer = useRef(null);
 
-  
   const tabs = ["Chats", "Groups", "Calls"];
 
   const groups = auth.allGroups;
@@ -146,14 +146,25 @@ function Chat() {
             : "text",
       };
     }
-    socket.emit("msg-send", {
-      message: Msg,
-      image: ImageUrl,
-      audio: audioUrl,
-      receiverId: clickedUser.currUserId,
-      senderId: auth.UserId,
-      replyTo,
-    });
+    if (conversation.type === "user") {
+      socket.emit("msg-send", {
+        receiverId: conversation.id,
+        message: Msg,
+        image: ImageUrl,
+        audio: audioUrl,
+        senderId: auth.UserId,
+        replyTo,
+      });
+    } else {
+      socket.emit("group-msg-send", {
+        groupId: conversation.id,
+        message: Msg,
+        image: ImageUrl,
+        audio: audioUrl,
+        senderId: auth.UserId,
+        replyTo,
+      });
+    }
     setReplyMessage(null);
     setMsg("");
     setImage(null);
@@ -246,7 +257,6 @@ function Chat() {
 
     return () => {
       window.removeEventListener("click", closeMenu);
-    
     };
   }, []);
   useEffect(() => {
@@ -264,7 +274,7 @@ function Chat() {
   }, []);
   //all groups and users
   useEffect(() => {
-    socket.on("refresh-users",async() => {
+    socket.on("refresh-users", async () => {
       await dispatch(getUser());
       await dispatch(getAllGroups());
     });
@@ -299,9 +309,8 @@ function Chat() {
   //receiving message from socket
   useEffect(() => {
     socket.on("receive-message", (data) => {
-      if (clickedUser.currUserId === data.senderId) {
+      if (conversation.type === "user" && conversation.id === data.senderId) {
         dispatch(addMessage(data));
-
         socket.emit("msg-delivered", {
           messageId: data._id,
           senderId: data.senderId,
@@ -315,11 +324,19 @@ function Chat() {
         dispatch(UnreadIncrement(data));
       }
     });
-
+    socket.on("receive-group-message", (data) => {
+      if (conversation.type === "group" && conversation.id === data.groupId) {
+        dispatch(addMessage(data));
+      } else {
+        dispatch(groupUnreadIncrement(data));
+      }
+    });
+    
     return () => {
       socket.off("receive-message");
+      socket.off("receive-group-message");
     };
-  }, [clickedUser.currUserId]);
+  }, [conversation.id, conversation.type]);
 
   //typing indicator
   useEffect(() => {
@@ -353,15 +370,15 @@ function Chat() {
   }, []);
   // msg seen update
   useEffect(() => {
-    socket.on("update-seen", async (data) => {
-      if (data.receiverId === clickedUser.currUserId) {
+    socket.on("update-seen", (data) => {
+      if (conversation.type === "user" && conversation.id === data.receiverId) {
         dispatch(updateMessageSeenStatus(data));
       }
     });
     return () => {
       socket.off("update-seen");
     };
-  }, [clickedUser.currUserId]);
+  }, [conversation.id, conversation.type]);
   //menu close effect in useRef
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -481,82 +498,80 @@ function Chat() {
               ))}
             </div>
             <div className="chat-Users-div">
-              { currTab === 0 && filteredUsers.map((user) => {
-                if (user._id !== auth.UserId)
+              {currTab === 0 &&
+                filteredUsers.map((user) => {
+                  if (user._id !== auth.UserId)
+                    return (
+                      <div
+                        key={user._id}
+                        onClick={() => {
+                          dispatch(setChatNull());
+                          setMsg("");
+                          setImage(null);
+                          setImagePreview(null);
+                          dispatch(
+                            setCurrentConversation({
+                              type: "user",
+                              id: user._id,
+                              name: user.username,
+                              profilePic: user.profilePic,
+                              isOnline: user.isOnline,
+                              lastSeen: user.lastSeen,
+                              members: [],
+                            }),
+                          );
+                          socket.emit("chat-opened", {
+                            senderId: user._id,
+                          });
+                          dispatch(getChat({ reqId: user._id }));
+                        }}
+                        className="user-side-div"
+                      >
+                        <div className="profile-wrapper">
+                          <img src={user.profilePic} />
+                          {user.isOnline && <div className="online-dot"></div>}
+                        </div>
+
+                        <div className="userName-chat-div">
+                          <p> {user.username}</p>
+                          <p
+                            style={{
+                              fontWeight: user.unreadCount > 0 ? "600" : "400",
+                              color:
+                                user.unreadCount > 0 ? "#0f0101e8" : "#777",
+                            }}
+                          >
+                            {user.lastMessage}
+                          </p>
+                        </div>
+                        {user.unreadCount > 0 && (
+                          <div className="unread-badge">{user.unreadCount}</div>
+                        )}
+                      </div>
+                    );
+                })}
+              {currTab === 1 &&
+                groups.map((group) => {
                   return (
                     <div
-                      key={user._id}
+                      // key={group._id}
                       onClick={() => {
-                        dispatch(setChatNull());
-                        setMsg("");
-                        setImage(null);
-                        setImagePreview(null);
                         dispatch(
-                          setCurrUser({
-                            currUserLastSeen: user.lastSeen,
-                            currUserId: user._id,
-                            currUserProfilePic: user.profilePic,
-                            currUserIsOnline: user.isOnline,
-                            currUserName: user.username,
+                          setCurrentConversation({
+                            type: "group",
+                            id: group._id,
+                            name: group.name,
+                            profilePic: group.groupImage,
+                            members: group.members,
                           }),
                         );
-                        socket.emit("chat-opened", {
-                          senderId: user._id,
-                        });
-                        dispatch(getChat({ reqId: user._id }));
+
+                        dispatch(getGroupChat(group._id));
                       }}
                       className="user-side-div"
                     >
                       <div className="profile-wrapper">
-                        <img src={user.profilePic} />
-                        {user.isOnline && <div className="online-dot"></div>}
-                      </div>
-
-                      <div className="userName-chat-div">
-                        <p> {user.username}</p>
-                        <p
-                          style={{
-                            fontWeight: user.unreadCount > 0 ? "600" : "400",
-                            color: user.unreadCount > 0 ? "#0f0101e8" : "#777",
-                          }}
-                        >
-                          {user.lastMessage}
-                        </p>
-                      </div>
-                      {user.unreadCount > 0 && (
-                        <div className="unread-badge">{user.unreadCount}</div>
-                      )}
-                    </div>
-                  );
-              })}
-              { currTab === 1 && groups.map((group) =>{
-                   return (
-                    <div
-                      // key={group._id}
-                      // // onClick={() => {
-                      //   // dispatch(setChatNull());
-                      //   // setMsg("");
-                      //   // setImage(null);
-                      //   // setImagePreview(null);
-                      //   // dispatch(
-                      //   //   setCurrUser({
-                      //   //     currUserLastSeen: user.lastSeen,
-                      //   //     currUserId: user._id,
-                      //   //     currUserProfilePic: user.profilePic,
-                      //   //     currUserIsOnline: user.isOnline,
-                      //   //     currUserName: user.username,
-                      //   //   }),
-                      //   // );
-                      //   socket.emit("chat-opened", {
-                      //     senderId: user._id,
-                      //   });
-                      //   dispatch(getChat({ reqId: user._id }));
-                      // }}
-                      className="user-side-div"
-                    >
-                      <div className="profile-wrapper">
                         <img src={group.groupImage} />
-                        
                       </div>
 
                       <div className="userName-chat-div">
@@ -575,24 +590,24 @@ function Chat() {
                       )}
                     </div>
                   );
-              })
-
-              }
+                })}
             </div>
           </div>
           {auth.userClicked && (
             <div className="chat-right-div">
               <div className="chat-header">
                 <div className="chat-user-info">
-                  <img src={clickedUser.currUserProfilePic} />
+                  <img src={conversation.profilePic} />
                   <div className="name-div">
-                    <p>{clickedUser.currUserName}</p>
+                    <p>{conversation.name}</p>
                     <p>
-                      {clickedUser.currUserIsOnline
-                        ? "online"
-                        : clickedUser.currUserLastSeen === null
-                          ? ""
-                          : `Last seen ${formatTime(clickedUser.currUserLastSeen)}`}
+                      {conversation.type === "user"
+                        ? conversation.isOnline
+                          ? "online"
+                          : conversation.lastSeen == null
+                            ? ""
+                            : `Last seen ${formatTime(conversation.lastSeen)}`
+                        : `${conversation.members.length} members`}
                     </p>
                   </div>
                 </div>
@@ -625,9 +640,9 @@ function Chat() {
                             });
                           }}
                           className={`${
-                            m.senderId === clickedUser.currUserId
-                              ? "other-message"
-                              : "my-message"
+                            m.senderId === auth.UserId
+                              ? "my-message"
+                              : "other-message"
                           } ${m.audioUrl ? "audio-bubble" : ""}`}
                         >
                           {!m.deletedforEveryone && m.replyTo && (
@@ -638,7 +653,7 @@ function Chat() {
                                 <div className="reply-header">
                                   {m.replyTo.senderId === auth.UserId
                                     ? "You"
-                                    : clickedUser.currUserName}
+                                    : conversation.name}
                                 </div>
 
                                 <div className="reply-text">
@@ -665,7 +680,7 @@ function Chat() {
                                   .toLocaleTimeString()
                                   .substring(0, 5)}
 
-                                {m.senderId !== clickedUser.currUserId &&
+                                {m.senderId === auth.UserId &&
                                   (m.seen ? (
                                     <i className="fa-solid fa-check-double seen-tick"></i>
                                   ) : m.delivered ? (
@@ -747,11 +762,12 @@ function Chat() {
                   </div>
                 )}
 
-                {typingUserId == clickedUser.currUserId && (
-                  <div className="typing-div other-message">
-                    <p>Typing...</p>
-                  </div>
-                )}
+                {conversation.type === "user" &&
+                  typingUserId === conversation.id && (
+                    <div className="typing-div other-message">
+                      <p>Typing...</p>
+                    </div>
+                  )}
 
                 <div ref={messageEndRef}></div>
               </div>
@@ -764,7 +780,7 @@ function Chat() {
                     <div className="reply-header">
                       {replyMessage.senderId === auth.UserId
                         ? "You"
-                        : clickedUser.currUserName}
+                        : conversation.name}
                     </div>
 
                     <div className="reply-text">
@@ -812,16 +828,30 @@ function Chat() {
                         placeholder="Type a message..."
                         onChange={(e) => {
                           clearTimeout(timer.current);
-                          socket.emit("user-typing", {
-                            senderId: auth.UserId,
-                            receiverId: clickedUser.currUserId,
-                          });
+                          if (conversation.type === "user") {
+                            socket.emit("user-typing", {
+                              receiverId: conversation.id,
+                              senderId: auth.UserId,
+                            });
+                          } else {
+                            socket.emit("group-typing", {
+                              groupId: conversation.id,
+                              senderId: auth.UserId,
+                            });
+                          }
 
                           timer.current = setTimeout(() => {
-                            socket.emit("stop-typing", {
-                              senderId: auth.UserId,
-                              receiverId: clickedUser.currUserId,
-                            });
+                            if (conversation.type === "user") {
+                              socket.emit("stop-typing", {
+                                senderId: auth.UserId,
+                                receiverId: conversation.id,
+                              });
+                            } else {
+                              socket.emit("stop-group-typing", {
+                                senderId: auth.UserId,
+                                groupId: conversation.id,
+                              });
+                            }
                           }, 1000);
                           setMsg(e.target.value);
                         }}
@@ -878,9 +908,8 @@ function Chat() {
                 </div>
               </div>
             </div>
-           )
-          }
-         
+          )}
+
           {!auth.userClicked && (
             <div className="chat-right-div-initial">
               <img className="chat-wall" src={chatwall} />
@@ -896,8 +925,8 @@ function Chat() {
               closeModal={() => {
                 setShowCreateGroup(false);
               }}
-              changeTab ={(num)=>{
-                 setCurrTab(num);
+              changeTab={(num) => {
+                setCurrTab(num);
               }}
             />
           </div>

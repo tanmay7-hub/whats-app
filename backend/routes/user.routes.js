@@ -12,13 +12,15 @@ import {
   photoUpload,
   audioUpload,
   createGroup,
-  myGroups
+  myGroups,
+  getGroupMessages
 } from "../controller/user.controller.js";
 import upload from "../config/multer.js";
 const router = express.Router();
 
 router.route("/message/send").post(protect, sendMessage);
 router.route("/message").get(protect, getChat); // all message  between two person
+router.route("/group/chat/:groupId").get(getGroupMessages);
 router.route("/user/getAllUser").get(protect, getAllUser);
 router.route("/upload-image").post(upload.single("image"), photoUpload);
 router.route("/upload-audio").post(upload.single("audio"), audioUpload);
