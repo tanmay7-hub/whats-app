@@ -1,35 +1,52 @@
 import { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {createGroup} from "../../../../app/action/auth.action.js"
+import { createGroup } from "../../../../app/action/auth.action.js";
+import clientServer from "../../../../config/axios.js";
 import "./createGroup.css";
-export function CreateGroup({ closeModal  , changeTab}) {
+export function CreateGroup({ closeModal, changeTab }) {
   const [profilePhoto, setProfilePhoto] = useState(
     "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
   );
   const [groupName, setGroupName] = useState("");
+  const [profileFile, setProfileFile] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const createGroupRef = useRef(null);
-  
+
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const loggedInUserId = auth.loggedInUser.userId;
-  const users = auth.allUser.filter(user => user._id !== loggedInUserId);
- 
+  const users = auth.allUser.filter((user) => user._id !== loggedInUserId);
 
+  const getImageUrl = async () => {
+    if (
+      profilePhoto ===
+      "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original"
+    )
+      return profilePhoto;
+    const formData = new FormData();
+    formData.append("image", profileFile);
+    const res = await clientServer.post("/upload-image", formData);
 
-  const handleCreateGroup = async()=>{
-       const data = {
-          name : groupName ,
-          members : selectedUsers.map(user => user._id) ,
-          groupImage: profilePhoto,
-        };
+    return res.data.imageUrl;
+  };
+  const handleCreateGroup = async () => {
+    const imageUrl = await getImageUrl();
+    const data = {
+      name: groupName,
+      members: selectedUsers.map((user) => user._id),
+      groupImage: imageUrl,
+    };
 
-        const res = await dispatch(createGroup(data));
-        if(createGroup.fulfilled.match(res)){
-          closeModal();
-          changeTab(1);
-        } 
-        
+    const res = await dispatch(createGroup(data));
+
+    if (createGroup.fulfilled.match(res)) {
+      setGroupName("");
+      setSelectedUsers([]);
+      setProfilePhoto("https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original");
+      setProfileFile(null);
+      closeModal();
+      changeTab(1);
+    }
   };
   const filteredUsers = users.filter(
     (user) => !selectedUsers.some((selected) => selected._id === user._id),
@@ -41,15 +58,17 @@ export function CreateGroup({ closeModal  , changeTab}) {
   };
   const handleUserSelected = (user) => {
     setSelectedUsers((prev) => {
-      if (prev.some(u => u._id === user._id))
-          return prev;
+      if (prev.some((u) => u._id === user._id)) return prev;
       return [...prev, user];
     });
   };
   // closing the create group div
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (createGroupRef.current && !createGroupRef.current.contains(e.target)) {
+      if (
+        createGroupRef.current &&
+        !createGroupRef.current.contains(e.target)
+      ) {
         closeModal();
       }
     };
@@ -65,17 +84,22 @@ export function CreateGroup({ closeModal  , changeTab}) {
       <div className="mainContainer">
         <div className="leftSide">
           <div style={{ overflow: "hidden" }} className="profilePhotodiv">
-            <input 
-            type="file"
-            id="groupPhoto"
-            onChange={(e)=>{
+            <input
+              type="file"
+              id="groupPhoto"
+              onChange={(e) => {
                 const file = e.target.files[0];
-                if(!file)return;
-               setProfilePhoto(
-                URL.createObjectURL(file)
-               );
-            }}
-            hidden 
+               
+                if (!file) return;
+                if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                    alert("Please select a JPG, PNG, or WEBP image.");
+                    return;
+                }
+                setProfileFile(file);
+                setProfilePhoto(URL.createObjectURL(file));
+                 console.log(URL.createObjectURL(file));
+              }}
+              hidden
             />
             <label htmlFor="groupPhoto">
               <img className="profilePhoto" src={profilePhoto} />
@@ -99,14 +123,13 @@ export function CreateGroup({ closeModal  , changeTab}) {
             {selectedUsers &&
               selectedUsers.map((user) => {
                 return (
-                  <span 
-                  className="selectedUserSpan"
-                  onClick={() => handleRemoveUser(user._id)}
-                  key={user._id}
+                  <span
+                    className="selectedUserSpan"
+                    onClick={() => handleRemoveUser(user._id)}
+                    key={user._id}
                   >
-                    
                     {user.username} &nbsp;
-                    <p >✖</p>
+                    <p>✖</p>
                   </span>
                 );
               })}
@@ -138,16 +161,14 @@ export function CreateGroup({ closeModal  , changeTab}) {
           </div>
         </div>
       </div>
-      <button className="createGroupbutton"
-      onClick ={()=>{
-        handleCreateGroup();
-      }}
-      disabled={
-        groupName.trim() === "" ||
-        selectedUsers.length === 0
-       }
+      <button
+        className="createGroupbutton"
+        onClick={() => {
+          handleCreateGroup();
+        }}
+        disabled={groupName.trim() === "" || selectedUsers.length === 0}
       >
-         Create group 
+        Create group
       </button>
     </div>
   );

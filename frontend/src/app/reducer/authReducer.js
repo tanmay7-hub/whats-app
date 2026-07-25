@@ -32,6 +32,15 @@ const initialState = {
     currUserName: undefined,
     currUserIsOnline: false,
   },
+  currentConversation: {
+    type: null,      // "user" | "group"
+    id: null,
+    name: "",
+    profilePic: "",
+    isOnline: false,
+    lastSeen: null,
+    members: [],
+},
   currChat: [],
 };
 const counterSlice = createSlice({

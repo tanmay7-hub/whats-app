@@ -40,7 +40,7 @@ export const myGroups = async(req,res)=>{
        const memberId = req.user.id;
        if(!memberId){
         return res.status(400).json({msg:"please provide member id"});
-       }
+       }  
        const groups = await Group.find({members:{$in:[memberId]}});
        const groupWithUnreadCount = await Promise.all(
             groups.map(async(group)=>{

@@ -69,8 +69,6 @@ function Chat() {
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(search.toLowerCase()),
   );
-  
-
   const handleReply = () => {
     setReplyMessage(menuMessage);
     setMenuPosition(null);
@@ -99,14 +97,12 @@ function Chat() {
   const formattedTime = (time) => {
     const minutes = Math.floor(recordingTime / 60);
     const seconds = recordingTime % 60;
-
     const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
     return formattedTime;
   };
   const getImageUrl = async () => {
     const formData = new FormData();
-
     formData.append("image", Image);
     const res = await clientServer.post("/upload-image", formData);
 
@@ -536,26 +532,26 @@ function Chat() {
               { currTab === 1 && groups.map((group) =>{
                    return (
                     <div
-                      key={group._id}
-                      onClick={() => {
-                        dispatch(setChatNull());
-                        setMsg("");
-                        setImage(null);
-                        setImagePreview(null);
-                        dispatch(
-                          setCurrUser({
-                            currUserLastSeen: user.lastSeen,
-                            currUserId: user._id,
-                            currUserProfilePic: user.profilePic,
-                            currUserIsOnline: user.isOnline,
-                            currUserName: user.username,
-                          }),
-                        );
-                        socket.emit("chat-opened", {
-                          senderId: user._id,
-                        });
-                        dispatch(getChat({ reqId: user._id }));
-                      }}
+                      // key={group._id}
+                      // // onClick={() => {
+                      //   // dispatch(setChatNull());
+                      //   // setMsg("");
+                      //   // setImage(null);
+                      //   // setImagePreview(null);
+                      //   // dispatch(
+                      //   //   setCurrUser({
+                      //   //     currUserLastSeen: user.lastSeen,
+                      //   //     currUserId: user._id,
+                      //   //     currUserProfilePic: user.profilePic,
+                      //   //     currUserIsOnline: user.isOnline,
+                      //   //     currUserName: user.username,
+                      //   //   }),
+                      //   // );
+                      //   socket.emit("chat-opened", {
+                      //     senderId: user._id,
+                      //   });
+                      //   dispatch(getChat({ reqId: user._id }));
+                      // }}
                       className="user-side-div"
                     >
                       <div className="profile-wrapper">
