@@ -10,7 +10,7 @@ const messageSchema = new mongoose.Schema(
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true,
+      default:null,
     },
     replyTo: {
       _id: {

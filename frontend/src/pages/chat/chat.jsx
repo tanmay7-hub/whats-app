@@ -56,6 +56,7 @@ function Chat() {
   const [reactionMenu, setReactionMenu] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+
   const createGroupRef = useRef(null);
   const menuRef = useRef(null);
   const users = auth.allUser;
@@ -261,6 +262,7 @@ function Chat() {
   }, []);
   useEffect(() => {
     socket.on("msg-sent", (data) => {
+      console.log("msg-sent", data);
       dispatch(addMessage(data));
     });
     return () => {
@@ -326,12 +328,13 @@ function Chat() {
     });
     socket.on("receive-group-message", (data) => {
       if (conversation.type === "group" && conversation.id === data.groupId) {
+         console.log("receive-group-message", data);
         dispatch(addMessage(data));
       } else {
         dispatch(groupUnreadIncrement(data));
       }
     });
-    
+
     return () => {
       socket.off("receive-message");
       socket.off("receive-group-message");
@@ -342,19 +345,28 @@ function Chat() {
   useEffect(() => {
     const handleTyping = (data) => {
       settypingUserId(data.senderId);
-      messageEndRef.current.scrollIntoView({
+
+      messageEndRef.current?.scrollIntoView({
         behavior: "auto",
       });
     };
-    const stopTyping = (data) => {
+
+    const handleStopTyping = () => {
       settypingUserId(null);
     };
+
     socket.on("user-typing", handleTyping);
-    socket.on("stop-typing", stopTyping);
+    socket.on("stop-typing", handleStopTyping);
+
+    socket.on("group-typing", handleTyping);
+    socket.on("stop-group-typing", handleStopTyping);
 
     return () => {
       socket.off("user-typing", handleTyping);
-      socket.off("stop-typing", stopTyping);
+      socket.off("stop-typing", handleStopTyping);
+
+      socket.off("group-typing", handleTyping);
+      socket.off("stop-group-typing", handleStopTyping);
     };
   }, []);
   // delivery status updating in ui
@@ -762,12 +774,11 @@ function Chat() {
                   </div>
                 )}
 
-                {conversation.type === "user" &&
-                  typingUserId === conversation.id && (
-                    <div className="typing-div other-message">
-                      <p>Typing...</p>
-                    </div>
-                  )}
+                {typingUserId && (
+                  <div className="typing-div other-message">
+                    <p>Typing...</p>
+                  </div>
+                )}
 
                 <div ref={messageEndRef}></div>
               </div>

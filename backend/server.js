@@ -166,6 +166,33 @@ io.on("connection", (socket) => {
       io.to(receiverSocketId).emit("receive-message", newMessage);
     }
   });
+  socket.on("group-typing", async (data) => {
+    const group = await Group.findById(data.groupId);
+
+    group.members.forEach((member) => {
+      if (member.toString() !== data.senderId) {
+        const memberSocket = onlineUser[member.toString()];
+
+        if (memberSocket) {
+          io.to(memberSocket).emit("group-typing", data);
+        }
+      }
+    });
+  });
+
+  socket.on("stop-group-typing", async (data) => {
+    const group = await Group.findById(data.groupId);
+
+    group.members.forEach((member) => {
+      if (member.toString() !== data.senderId) {
+        const memberSocket = onlineUser[member.toString()];
+
+        if (memberSocket) {
+          io.to(memberSocket).emit("stop-group-typing", data);
+        }
+      }
+    });
+  });
   socket.on("group-msg-send", async (data) => {
     const msg = new Message({
       senderId: data.senderId,
@@ -186,16 +213,19 @@ io.on("connection", (socket) => {
       },
     );
     const senderSocket = onlineUser[data.senderId];
-   
 
     group.members.forEach((member) => {
-      const memberSocket = onlineUser[member.toString()];
       if (member.toString() != data.senderId) {
-        io.to(memberSocket).emit("receive-group-message", msg);
+        const memberSocket = onlineUser[member.toString()];
+        if (memberSocket) {
+          console.log("Emitting to socket:", memberSocket);
+          io.to(memberSocket).emit("receive-group-message", msg);
+        }
       }
     });
-
-    io.to(senderSocket).emit("msg-sent", msg);
+    if (senderSocket) {
+      io.to(senderSocket).emit("msg-sent", msg);
+    }
   });
   socket.on("msg-delivered", async (data) => {
     await Message.updateOne(
