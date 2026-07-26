@@ -154,6 +154,8 @@ io.on("connection", (socket) => {
     );
 
     await newMessage.save();
+    await newMessage.populate("senderId","profilePic username");
+
     const receiverSocketId = onlineUser[data.receiverId];
     const senderSocketId = onlineUser[data.senderId];
 
@@ -203,6 +205,7 @@ io.on("connection", (socket) => {
       replyTo: data.replyTo,
     });
     await msg.save();
+    await msg.populate("senderId","profilePic username");
     const group = await Group.findById(data.groupId);
     await Group.updateOne(
       { _id: data.groupId },
@@ -212,6 +215,7 @@ io.on("connection", (socket) => {
         },
       },
     );
+    
     const senderSocket = onlineUser[data.senderId];
 
     group.members.forEach((member) => {
@@ -240,7 +244,7 @@ io.on("connection", (socket) => {
         .to(senderSocketId)
         .emit("message-delivered", { messageId: data.messageId });
     }
-  });
+  }); 
   socket.on("user-typing", async (data) => {
     const receiverSocketId = onlineUser[data.receiverId];
 
@@ -259,7 +263,7 @@ io.on("connection", (socket) => {
     await User.updateOne(
       { _id: userId },
       { $set: { lastSeen: new Date(), isOnline: false } },
-    );
+    ); 
 
     delete onlineUser[userId];
     delete socketToUser[socket.id];

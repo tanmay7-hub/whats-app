@@ -111,9 +111,9 @@ export const getGroupMessages = async(req,res)=>{
      const {groupId } = req.params;
      if(!groupId) return res.status(404).json({msg:"please provide  valid group id"});
 
-     const messages = await Message.find({groupId : groupId}).sort({
+     const messages = await Message.find({groupId : groupId}).populate("senderId" , "profilePic username" ).sort({
     createdAt:1
-});;
+     });;
      return res.status(200).json({msg:"group nessage fetched" , messages});
      
   }catch(err){

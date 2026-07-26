@@ -652,7 +652,7 @@ function Chat() {
                             });
                           }}
                           className={`${
-                            m.senderId === auth.UserId
+                            m.senderId._id === auth.UserId
                               ? "my-message"
                               : "other-message"
                           } ${m.audioUrl ? "audio-bubble" : ""}`}
@@ -692,7 +692,7 @@ function Chat() {
                                   .toLocaleTimeString()
                                   .substring(0, 5)}
 
-                                {m.senderId === auth.UserId &&
+                                {m.senderId._id === auth.UserId &&
                                   (m.seen ? (
                                     <i className="fa-solid fa-check-double seen-tick"></i>
                                   ) : m.delivered ? (
