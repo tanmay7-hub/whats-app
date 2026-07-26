@@ -648,3 +648,41 @@
 .active{
    background:#d8d8d8;
 }
+.group-message-wrapper{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    align-self:flex-start;
+}
+
+.group-message-profile{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    object-fit:cover;
+    flex-shrink:0;
+    margin-bottom:4px;
+}
+
+.group-message-name{
+    font-size:13px;
+    font-weight:600;
+    color:#2aa84a;
+    margin-bottom:6px;
+}
+.group-avatar-container{
+    width:38px;
+    display:flex;
+    justify-content:center;
+    flex-shrink:0;
+}
+/* .group-message-wrapper{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    margin-top:12px;
+}
+
+.group-message-wrapper.same-sender{
+    margin-top:2px;
+} */

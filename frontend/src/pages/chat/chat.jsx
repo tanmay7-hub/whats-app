@@ -136,10 +136,13 @@ function Chat() {
     }
 
     if (replyMessage) {
-      replyTo = {
+      replyTo = replyTo = {
         _id: replyMessage._id,
-        senderId: replyMessage.senderId,
+        senderId: replyMessage.senderId._id,
+        senderName: replyMessage.senderId.username,
         message: replyMessage.message,
+        imageUrl: replyMessage.imageUrl,
+        audioUrl: replyMessage.audioUrl,
         type: replyMessage.audioUrl
           ? "audio"
           : replyMessage.imageUrl
@@ -328,7 +331,7 @@ function Chat() {
     });
     socket.on("receive-group-message", (data) => {
       if (conversation.type === "group" && conversation.id === data.groupId) {
-         console.log("receive-group-message", data);
+        console.log("receive-group-message", data);
         dispatch(addMessage(data));
       } else {
         dispatch(groupUnreadIncrement(data));
@@ -632,11 +635,28 @@ function Chat() {
                 )}
 
                 {AllMessages !== undefined &&
-                  AllMessages.map((m) => {
-                    return (
-                      <>
+                  AllMessages.map((m, idx) => {
+                    const prev = AllMessages[idx - 1];
+
+                    const showSender =
+                      conversation.type === "group" &&
+                      (idx === 0 || prev.senderId._id !== m.senderId._id);
+                    // const sameSenderAsPrevious = idx > 0 && prev.senderId._id === m.senderId._id && prev.senderId._id !== auth.UserId;
+                    return m.senderId._id !== auth.UserId ? (
+                      <div
+                        className={`group-message-wrapper`}
+                      >
+                        {conversation.type === "group" && (
+                          <div className="group-avatar-container">
+                            {showSender && (
+                              <img
+                                src={m.senderId.profilePic}
+                                className="group-message-profile"
+                              />
+                            )}
+                          </div>
+                        )}
                         <div
-                          key={m._id}
                           onContextMenu={(e) => {
                             if (m.deletedforEveryone) return;
                             e.preventDefault();
@@ -651,21 +671,23 @@ function Chat() {
                               y: e.clientY - 65,
                             });
                           }}
-                          className={`${
-                            m.senderId._id === auth.UserId
-                              ? "my-message"
-                              : "other-message"
-                          } ${m.audioUrl ? "audio-bubble" : ""}`}
+                          className={`other-message ${m.audioUrl ? "audio-bubble" : ""}`}
                         >
+                          {showSender && (
+                            <div className="group-message-name">
+                              {m.senderId.username}
+                            </div>
+                          )}
+
                           {!m.deletedforEveryone && m.replyTo && (
                             <div className="reply-preview">
                               <div className="reply-line"></div>
 
                               <div className="reply-content">
                                 <div className="reply-header">
-                                  {m.replyTo.senderId === auth.UserId
+                                  {m.replyTo.senderId.toString() === auth.UserId
                                     ? "You"
-                                    : conversation.name}
+                                    : m.replyTo.senderName}
                                 </div>
 
                                 <div className="reply-text">
@@ -708,22 +730,97 @@ function Chat() {
                               <i>This message was deleted</i>
                             </div>
                           )}
-                          {!m.deletedforEveryone && m.reactions?.length > 0 && (
-                            <div className="reaction-container">
-                              {Object.entries(
-                                m.reactions.reduce((acc, r) => {
-                                  acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                                  return acc;
-                                }, {}),
-                              ).map(([emoji, count]) => (
-                                <span>
-                                  {emoji} {count}
-                                </span>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                      </>
+                      </div>
+                    ) : (
+                      <div
+                        key={m._id}
+                        onContextMenu={(e) => {
+                          if (m.deletedforEveryone) return;
+                          e.preventDefault();
+                          setMenuMessage(m);
+                          setMenuPosition({
+                            x: e.clientX + 15,
+                            y: e.clientY - 5,
+                          });
+
+                          setReactionMenu({
+                            x: e.clientX + 15,
+                            y: e.clientY - 65,
+                          });
+                        }}
+                        className={`${
+                          m.senderId._id === auth.UserId
+                            ? "my-message"
+                            : "other-message"
+                        } ${m.audioUrl ? "audio-bubble" : ""}`}
+                      >
+                        {!m.deletedforEveryone && m.replyTo && (
+                          <div className="reply-preview">
+                            <div className="reply-line"></div>
+
+                            <div className="reply-content">
+                              <div className="reply-header">
+                                {m.replyTo.senderId.toString() === auth.UserId
+                                  ? "You"
+                                  : m.replyTo.senderName}
+                              </div>
+
+                              <div className="reply-text">
+                                {m.replyTo.message.length > 0
+                                  ? m.replyTo.message
+                                  : m.replyTo.type != "audio"
+                                    ? "📷 Photo"
+                                    : "🎵 Voice Message"}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {!m.deletedforEveryone && (
+                          <div style={{ position: "relative" }}>
+                            {m.audioUrl && (
+                              <div className="audio-message">
+                                <MusicPlayer audioUrl={m.audioUrl} />
+                              </div>
+                            )}
+                            {m.imageUrl && <img src={m.imageUrl} />}
+                            <p>{m.message}</p>
+                            <div className="message-meta">
+                              {new Date(m.createdAt)
+                                .toLocaleTimeString()
+                                .substring(0, 5)}
+
+                              {m.senderId._id === auth.UserId &&
+                                (m.seen ? (
+                                  <i className="fa-solid fa-check-double seen-tick"></i>
+                                ) : m.delivered ? (
+                                  <i className="fa-solid fa-check-double"></i>
+                                ) : (
+                                  <i className="fa-solid fa-check"></i>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                        {m.deletedforEveryone && (
+                          <div className="deleted-message">
+                            <i>This message was deleted</i>
+                          </div>
+                        )}
+                        {!m.deletedforEveryone && m.reactions?.length > 0 && (
+                          <div className="reaction-container">
+                            {Object.entries(
+                              m.reactions.reduce((acc, r) => {
+                                acc[r.emoji] = (acc[r.emoji] || 0) + 1;
+                                return acc;
+                              }, {}),
+                            ).map(([emoji, count]) => (
+                              <span>
+                                {emoji} {count}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 {menuPosition && (
@@ -739,7 +836,7 @@ function Chat() {
                       <span>Reply</span>
                     </div>
 
-                    {!(menuMessage.senderId !== auth.UserId) && (
+                    {!(menuMessage.senderId._id !== auth.UserId) && (
                       <div
                         className="context-option"
                         onClick={handleDeleteForEveryone}
@@ -789,9 +886,9 @@ function Chat() {
 
                   <div className="reply-content">
                     <div className="reply-header">
-                      {replyMessage.senderId === auth.UserId
+                      {replyMessage.senderId._id === auth.UserId
                         ? "You"
-                        : conversation.name}
+                        : replyMessage.senderId.username}
                     </div>
 
                     <div className="reply-text">

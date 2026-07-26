@@ -4,13 +4,13 @@ const messageSchema = new mongoose.Schema(
   {
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
     },
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-      default:null,
+      ref: "User",
+      default: null,
     },
     replyTo: {
       _id: {
@@ -22,10 +22,16 @@ const messageSchema = new mongoose.Schema(
         enum: ["text", "image", "audio"],
       },
       message: String,
+
       senderId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
+        ref: "User",
       },
+
+      senderName: String,
+
+      imageUrl: String,
+      audioUrl: String,
     },
     deletedforEveryone: {
       type: Boolean,
@@ -36,7 +42,7 @@ const messageSchema = new mongoose.Schema(
         {
           userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "user",
+            ref: "User",
           },
           emoji: String,
         },
@@ -65,15 +71,15 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    seen:{
-      type:Boolean,
-      default : false
+    seen: {
+      type: Boolean,
+      default: false,
     },
     seenBy: {
       type: [
         {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "user",
+          ref: "User",
         },
       ],
       default: [],

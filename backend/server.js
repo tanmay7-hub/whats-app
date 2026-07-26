@@ -206,6 +206,7 @@ io.on("connection", (socket) => {
     });
     await msg.save();
     await msg.populate("senderId","profilePic username");
+    await msg.populate("receiverId", "username profilePic");
     const group = await Group.findById(data.groupId);
     await Group.updateOne(
       { _id: data.groupId },
