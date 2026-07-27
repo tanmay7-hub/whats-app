@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { createGroup } from "../../../../app/action/auth.action.js";
-import clientServer from "../../../../config/axios.js";
+import { createGroup } from "../../app/action/auth.action.js";
+import clientServer from "../../config/axios.js";
 import "./createGroup.css";
 export function CreateGroup({ closeModal, changeTab }) {
   const [profilePhoto, setProfilePhoto] = useState(

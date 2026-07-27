@@ -50,7 +50,7 @@ io.on("connection", (socket) => {
     }
 
     io.emit("refresh-users");
-  });
+  }); 
   socket.on("chat-opened", async (data) => {
     const senderId = data.senderId;
     const receiverId = socketToUser[socket.id];
@@ -74,7 +74,7 @@ io.on("connection", (socket) => {
     const userId = socketToUser[socket.id];
     const msg = await Message.findById(data.messageId);
 
-    const existingReaction = await msg.reactions.find(
+    const existingReaction =  msg.reactions.find(
       (r) => r.userId.toString() === userId,
     );
 
@@ -92,7 +92,22 @@ io.on("connection", (socket) => {
     }
 
     await msg.save();
+    if (msg.groupId) {
+      const group = await Group.findById(msg.groupId);
 
+      group.members.forEach((member) => {
+        const socketId = onlineUser[member.toString()];
+
+        if (socketId) {
+          io.to(socketId).emit("reaction-updated", {
+            messageId: msg._id,
+            reactions: msg.reactions,
+          });
+        }
+      });
+
+      return;
+    }
     const user1 = onlineUser[msg.senderId];
     const user2 = onlineUser[msg.receiverId];
 
@@ -154,7 +169,7 @@ io.on("connection", (socket) => {
     );
 
     await newMessage.save();
-    await newMessage.populate("senderId","profilePic username");
+    await newMessage.populate("senderId", "profilePic username");
 
     const receiverSocketId = onlineUser[data.receiverId];
     const senderSocketId = onlineUser[data.senderId];
@@ -205,7 +220,7 @@ io.on("connection", (socket) => {
       replyTo: data.replyTo,
     });
     await msg.save();
-    await msg.populate("senderId","profilePic username");
+    await msg.populate("senderId", "profilePic username");
     await msg.populate("receiverId", "username profilePic");
     const group = await Group.findById(data.groupId);
     await Group.updateOne(
@@ -216,7 +231,7 @@ io.on("connection", (socket) => {
         },
       },
     );
-    
+
     const senderSocket = onlineUser[data.senderId];
 
     group.members.forEach((member) => {
@@ -245,7 +260,7 @@ io.on("connection", (socket) => {
         .to(senderSocketId)
         .emit("message-delivered", { messageId: data.messageId });
     }
-  }); 
+  });
   socket.on("user-typing", async (data) => {
     const receiverSocketId = onlineUser[data.receiverId];
 
@@ -264,7 +279,7 @@ io.on("connection", (socket) => {
     await User.updateOne(
       { _id: userId },
       { $set: { lastSeen: new Date(), isOnline: false } },
-    ); 
+    );
 
     delete onlineUser[userId];
     delete socketToUser[socket.id];

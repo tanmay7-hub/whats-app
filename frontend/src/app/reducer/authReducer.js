@@ -68,7 +68,7 @@ const counterSlice = createSlice({
       const msg = state.currChat.find((m) => m._id === messageId);
 
       if (msg) {
-        msg.reactions = reactions;
+         msg.reactions = reactions;
       }
     },
     UnreadIncrement: (state, action) => {
