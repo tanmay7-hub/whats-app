@@ -42,6 +42,7 @@ function Chat() {
 
   const [Msg, setMsg] = useState("");
   const [Image, setImage] = useState(null);
+  const [ImagePreview, setImagePreview] = useState(null);
   const [search, setsearch] = useState("");
   const [typingUserId, settypingUserId] = useState(null);
   const [Send, setSend] = useState(false);
@@ -56,6 +57,7 @@ function Chat() {
   const users = auth.allUser;
   const conversation = auth.currentConversation;
   const AllMessages = auth.currChat;
+  const [isRecording, setIsRecording] = useState(false);
 
   const tabs = ["Chats", "Groups", "Calls"];
 
@@ -143,8 +145,8 @@ function Chat() {
     }
     setReplyMessage(null);
     setMsg("");
-    setImage(null);
     setImagePreview(null);
+    setImage(null);
     setSend(false);
     setAudioBlob(null);
   };
@@ -158,17 +160,7 @@ function Chat() {
       socket.off("message-deleted");
     };
   }, []);
-  useEffect(() => {
-    const closeMenu = () => {
-      setMenuPosition(null);
-      setMenuMessage(null);
-    };
-    window.addEventListener("click", closeMenu);
-
-    return () => {
-      window.removeEventListener("click", closeMenu);
-    };
-  }, []);
+  
   useEffect(() => {
     socket.on("msg-sent", (data) => {
       console.log("msg-sent", data);
@@ -321,21 +313,7 @@ function Chat() {
   };
   return (
     <div className="container">
-      {/* <div className="header">
-          <div className="logo-div">
-            <div className="icons-div-chat">
-              <i className=" icons-chat fa-brands fa-telegram"></i>
-            </div>
-            <p className="header-heading">Let's Chat!</p>
-          </div>
 
-          <div className="logo-div">
-            <div className="icons-div-chat">
-              <i class="icons-chat fa-solid fa-bell"></i>
-              <i class="icons-chat fa-solid fa-gear"></i>
-            </div>
-          </div>
-        </div> */}
       <div className="main-container">
         <SideBar
           auth={auth}
@@ -360,7 +338,7 @@ function Chat() {
           socket={socket}
           setMsg={setMsg}
           setImage={setImage}
-          setImagePreview={setImagePreview}
+         
         />
         {auth.userClicked && (
           <div className="chat-right-div">
@@ -372,7 +350,7 @@ function Chat() {
               auth={auth}
               typingUserId={typingUserId}
               messageEndRef={messageEndRef}
-             
+              onReply={setReplyMessage}
             />
             <ReplyPreview
               replyMessage={replyMessage}
@@ -385,14 +363,17 @@ function Chat() {
               setMsg={setMsg}
               Image={Image}
               setImage={setImage}
-              ImagePreview={ImagePreview}
-              setImagePreview={setImagePreview}
               conversation={conversation}
               socket={socket}
               auth={auth}
               handleSend={handleSend}
-              timer={timer}
-              handleSend={handleSend}
+              setImagePreview = {setImagePreview}
+              ImagePreview = {ImagePreview}
+              isRecording = {isRecording}
+              setIsRecording = {setIsRecording}
+              handleSend = {handleSend}
+              Msg ={Msg}
+              setMsg = {setMsg}
             />
           </div>
         )}

@@ -1,11 +1,13 @@
 import MusicPlayer from "../musicPlayer/musicPlayer";
-
+import {useState , useEffect} from "react"
+import socket from "../../sockets/socket.js"
 export function MessageContainer({
   auth,
   AllMessages,
   conversation,
   typingUserId,
   messageEndRef,
+  onReply
 }) {
   const [menuMessage, setMenuMessage] = useState(null);
   const [menuPosition, setMenuPosition] = useState(null);
@@ -26,6 +28,17 @@ export function MessageContainer({
     setMenuPosition(null);
     setMenuMessage(null);
   };
+  useEffect(() => {
+    const closeMenu = () => {
+      setMenuPosition(null);
+      setMenuMessage(null);
+    };
+    window.addEventListener("click", closeMenu);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+    };
+  }, []);
   const handleReply = () => {
     onReply(menuMessage);
     setMenuPosition(null);

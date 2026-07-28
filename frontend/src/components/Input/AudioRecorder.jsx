@@ -1,7 +1,8 @@
-export function AudioRecorder({ showRecorder, onAudioRecorded }) {
+import { useState  , useEffect , useRef} from "react"
+export function AudioRecorder({ showRecorder, onAudioRecorded , isRecording , setIsRecording }) {
   if (!showRecorder) return null;
 
-  const [isRecording, setIsRecording] = useState(false);
+
   const [liveWaveform, setLiveWaveform] = useState([]);
   const [recordingTime, setRecordingTime] = useState(0);
 

@@ -21,7 +21,7 @@ export function SideBar ( {
     socket,
     setMsg,
     setImage,
-    setImagePreview,
+    
 }){
     return(
         <div className="chat-left-div">
@@ -115,7 +115,7 @@ export function SideBar ( {
                           dispatch(setChatNull());
                           setMsg("");
                           setImage(null);
-                          setImagePreview(null);
+                          // setImagePreview(null);
                           dispatch(
                             setCurrentConversation({
                               type: "user",

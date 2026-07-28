@@ -1,12 +1,23 @@
 import { AudioRecorder } from "./AudioRecorder";
-
-export function MessageInput() {
+import { useRef } from "react";
+export function MessageInput({ Msg,
+  setMsg,
+  Image,
+  setImage,
+  ImagePreview,
+  setImagePreview,
+  conversation,
+  socket,
+  auth,
+  handleSend,
+  isRecording,
+  setIsRecording,}) {
     
-    const [ImagePreview, setImagePreview] = useState(null);
+  const timer = useRef(null);
   return (
     <div className="message-input-div">
       <div className="message-input-upper-div">
-        {Image !== null && <img src={ImagePreview} />}
+        {ImagePreview !== null && <img src={ImagePreview} />}
       </div>
 
       <div className="message-input-lower-div">
@@ -54,6 +65,7 @@ export function MessageInput() {
                     });
                   }
                 }, 1000);
+
                 setMsg(e.target.value);
               }}
               disabled={isRecording}
@@ -65,6 +77,8 @@ export function MessageInput() {
           <AudioRecorder
              showRecorder={Msg === ""}
              onAudioRecorded={(blob) => handleSend(blob)}
+             isRecording = {isRecording}
+             setIsRecording = {setIsRecording}
           />
         
       </div>
