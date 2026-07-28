@@ -27,6 +27,7 @@ import MessageContainer from "./components/MessagesContainer/message.jsx";
 import socket from "../../sockets/socket.js";
 import chatwall from "../../assets/chat-wall.png";
 import { formatTime } from "../../utils/timer.js";
+import { GroupInfo } from "../../components/groupInfo/GroupInfo.jsx";
 function Chat() {
   const messageEndRef = useRef(null);
   const dispatch = useDispatch();
@@ -416,21 +417,6 @@ function Chat() {
   return (
     <>
       <div className="container">
-        {/* <div className="header">
-          <div className="logo-div">
-            <div className="icons-div-chat">
-              <i className=" icons-chat fa-brands fa-telegram"></i>
-            </div>
-            <p className="header-heading">Let's Chat!</p>
-          </div>
-
-          <div className="logo-div">
-            <div className="icons-div-chat">
-              <i class="icons-chat fa-solid fa-bell"></i>
-              <i class="icons-chat fa-solid fa-gear"></i>
-            </div>
-          </div>
-        </div> */}
         <div className="main-container">
           <div className="chat-left-div">
             <div className="chat-search-bar">
@@ -1025,6 +1011,8 @@ function Chat() {
               <p>Select a user to start chatting</p>
             </div>
           )}
+
+          <GroupInfo group = {conversation}/>
         </div>
 
         {showCreateGroup && (
