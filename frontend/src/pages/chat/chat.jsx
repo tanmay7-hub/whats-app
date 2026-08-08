@@ -4,7 +4,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import clientServer from "../../config/axios.js";
 import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
-import { CreateGroup } from "./components/createGroup/CreateGroup.jsx";
+import { CreateGroup } from "../../components/createGroup/CreateGroup.jsx";
+import { CSSTransition } from "react-transition-group";
 import {
   getUser,
   getAllGroups,
@@ -22,12 +23,16 @@ import {
   deleteMessage,
   updateReaction,
   setCurrentConversation,
+  updateClickedStatus,
 } from "../../app/reducer/authReducer.js";
-import MessageContainer from "./components/MessagesContainer/message.jsx";
+import MessageContainer from "../../components/MessagesContainer/message.jsx";
 import socket from "../../sockets/socket.js";
 import chatwall from "../../assets/chat-wall.png";
 import { formatTime } from "../../utils/timer.js";
 import { GroupInfo } from "../../components/groupInfo/GroupInfo.jsx";
+import { GroupEdit } from "../../components/groupEdit/GroupEdit";
+import { UserProfile } from "../../components/userProfile/UserProfile.jsx";
+import { GroupAdd } from "../../components/GroupAdd/GroupAdd.jsx";
 function Chat() {
   const messageEndRef = useRef(null);
   const dispatch = useDispatch();
@@ -57,16 +62,53 @@ function Chat() {
   const [reactionMenu, setReactionMenu] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-
+  const [groupModalMode, setGroupModalMode] = useState("create");
   const createGroupRef = useRef(null);
   const menuRef = useRef(null);
   const users = auth.allUser;
   const conversation = auth.currentConversation;
   const AllMessages = auth.currChat;
   const timer = useRef(null);
+  const [showGroupEdit, setShowGroupEdit] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [groupPage, setGroupPage] = useState("");
 
   const tabs = ["Chats", "Groups", "Calls"];
 
+  const handleBack = () => {
+    setShowGroupEdit(false);
+  };
+  const handleUpdateGroup = async ({ name, image }) => {
+    let imageUrl = conversation.profilePic;
+
+    if (image) {
+      imageUrl = await getImageUrl(image);
+    }
+
+    dispatch(
+      updateGroup({
+        groupId: conversation.id,
+        name,
+        groupImage: imageUrl,
+      }),
+    );
+  };
+  const handleRemoveMember = (member) => {
+    dispatch(
+      removeMember({
+        groupId: conversation.id,
+        memberId: member._id,
+      }),
+    );
+  };
+  const handleAddMembers = (selectedUsers) => {
+    dispatch(
+      addMembers({
+        groupId: conversation.id,
+        members: selectedUsers.map((user) => user._id),
+      }),
+    );
+  };
   const groups = auth.allGroups;
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(search.toLowerCase()),
@@ -521,6 +563,7 @@ function Chat() {
                               members: [],
                             }),
                           );
+                
                           socket.emit("chat-opened", {
                             senderId: user._id,
                           });
@@ -560,12 +603,15 @@ function Chat() {
                         dispatch(
                           setCurrentConversation({
                             type: "group",
+                            admin: group.admin,
                             id: group._id,
                             name: group.name,
                             profilePic: group.groupImage,
                             members: group.members,
                           }),
                         );
+
+                       
 
                         dispatch(getGroupChat(group._id));
                       }}
@@ -599,7 +645,17 @@ function Chat() {
               <div className="chat-header">
                 <div className="chat-user-info">
                   <img src={conversation.profilePic} />
-                  <div className="name-div">
+                  <div
+                    className="name-div"
+                    onClick={() => {
+                      if (conversation.type === "group") {
+                        setGroupPage("info");
+                      } else {
+                        setSelectedUser(conversation);
+                        setGroupPage("user");
+                      }
+                    }}
+                  >
                     <p>{conversation.name}</p>
                     <p>
                       {conversation.type === "user"
@@ -629,9 +685,7 @@ function Chat() {
                       (idx === 0 || prev.senderId._id !== m.senderId._id);
                     // const sameSenderAsPrevious = idx > 0 && prev.senderId._id === m.senderId._id && prev.senderId._id !== auth.UserId;
                     return m.senderId._id !== auth.UserId ? (
-                      <div
-                        className={`group-message-wrapper`}
-                      >
+                      <div className={`group-message-wrapper`}>
                         {conversation.type === "group" && (
                           <div className="group-avatar-container">
                             {showSender && (
@@ -1012,7 +1066,64 @@ function Chat() {
             </div>
           )}
 
-          <GroupInfo group = {conversation}/>
+          {groupPage !== "" && conversation && conversation.members && (
+            <div className="group-pages">
+              <div
+                className={`page ${groupPage === "info" ? "active" : "left"}`}
+              >
+                <GroupInfo
+                  group={conversation}
+                  onAddMember={() => setGroupPage("add")}
+                  onUserClick={(user) => {
+                    setSelectedUser(user);
+                    setGroupPage("user");
+                  }}
+                  onCross={() => {
+                    setGroupPage("");
+                  }}
+                  onEditClick={() => setGroupPage("edit")}
+                  onLeaveGroup={() => {
+                    setGroupPage("");
+                    dispatch(updateClickedStatus());
+                  }}
+                />
+              </div>
+
+              <div
+                className={`page ${groupPage === "add" ? "active" : "right"}`}
+              >
+                <GroupAdd
+                  group={conversation}
+                  onCross={() => {
+                    setGroupPage("");
+                  }}
+                  onBack={() => setGroupPage("info")}
+                />
+              </div>
+
+              <div
+                className={`page ${groupPage === "edit" ? "active" : "right"}`}
+              >
+                <GroupEdit
+                  group={conversation}
+                  onBack={() => setGroupPage("info")}
+                  onCross={() => {
+                    setGroupPage("");
+                  }}
+                />
+              </div>
+              <div
+                className={`page ${groupPage === "user" ? "active" : "right"}`}
+              >
+                {selectedUser && (
+                  <UserProfile
+                    user={selectedUser}
+                    onBack={() => setGroupPage("info")}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {showCreateGroup && (

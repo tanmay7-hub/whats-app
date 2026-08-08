@@ -203,7 +203,7 @@ io.on("connection", (socket) => {
       imageUrl: data.image,
       audioUrl: data.audio,
       replyTo: data.replyTo,
-    });
+    }); 
     await msg.save();
     await msg.populate("senderId","profilePic username");
     await msg.populate("receiverId", "username profilePic");

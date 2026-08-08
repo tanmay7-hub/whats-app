@@ -8,6 +8,10 @@ import {
   getAllGroups,
   createGroup,
   getGroupChat,
+  leaveGroup,
+  updateGroup,
+  addMembers,
+  removeMember,
 } from "../action/auth.action.js";
 const initialState = {
   loggedInUser: {
@@ -61,6 +65,9 @@ const counterSlice = createSlice({
           msg.deletedforEveryone = true;
         }
       });
+    },
+    updateClickedStatus: (state, action) => {
+      state.userClicked = !state.userClicked;
     },
     updateReaction: (state, action) => {
       const { messageId, reactions } = action.payload;
@@ -176,7 +183,6 @@ const counterSlice = createSlice({
         state.message = action.payload.data.message;
       })
       .addCase(sendMessage.pending, (state, action) => {
-        //   state.isLoading = true; make a variable like is sending message
         state.isError = false;
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
@@ -225,7 +231,60 @@ const counterSlice = createSlice({
       .addCase(getGroupChat.rejected, (state) => {
         state.isLoading = false;
         state.isError = true;
+      })
+      .addCase(updateGroup.fulfilled, (state, action) => {
+        const updatedGroup = action.payload.group;
+
+        state.allGroups = state.allGroups.map((group) =>
+          group._id === updatedGroup._id ? updatedGroup : group,
+        );
+
+        if (state.currentConversation?.id === updatedGroup._id) {
+          state.currentConversation = {
+            ...state.currentConversation,
+            ...updatedGroup,
+            profilePic: updatedGroup.groupImage,
+          };
+        }
+      })
+      .addCase(addMembers.fulfilled, (state, action) => {
+        const updatedGroup = action.payload.group;
+
+        state.allGroups = state.allGroups.map((group) =>
+          group._id === updatedGroup._id ? updatedGroup : group,
+        );
+
+        if (state.currentConversation?.id === updatedGroup._id) {
+          state.currentConversation = {
+            ...state.currentConversation,
+            ...updatedGroup,
+            profilePic: updatedGroup.groupImage,
+          };
+        }
+      })
+      .addCase(leaveGroup.fulfilled, (state, action) => {
+        state.allGroups = state.allGroups.filter(
+          (group) => group._id !== action.payload.groupId,
+        );
+
+       
+      })
+      .addCase(removeMember.fulfilled, (state, action) => {
+        const updatedGroup = action.payload.group;
+
+        state.groups = state.groups.map((group) =>
+          group._id === updatedGroup._id ? updatedGroup : group,
+        );
+
+        if (state.currentConversation?.id === updatedGroup._id) {
+          state.currentConversation = {
+            ...state.currentConversation,
+            ...updatedGroup,
+            profilePic: updatedGroup.groupImage,
+          };
+        }
       });
+    
   },
 });
 
@@ -240,6 +299,7 @@ export const {
   deleteMessage,
   updateReaction,
   setCurrentConversation,
+  updateClickedStatus,
 } = counterSlice.actions;
 
 export default counterSlice.reducer;

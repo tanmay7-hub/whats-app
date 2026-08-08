@@ -1,0 +1,142 @@
+.user-profile {
+    width: 100%;
+    height: 100%;
+    border-radius:1.1rem;
+    background: #fff;
+    backdrop-filter:blur(10px);
+    overflow-y: auto;
+}
+
+.user-profile::-webkit-scrollbar {
+    display: none;
+}
+
+
+
+.user-profile-header {
+    margin-top: 1.1rem;
+    padding: 0 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    font-size: 1.2rem;
+}
+
+.user-profile-header p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.user-profile-back {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.user-profile-back:hover {
+    background-color: rgb(236, 233, 233);
+    transform: scale(1.08);
+}
+
+
+/* Profile section */
+
+.user-profile-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin-top: 2rem;
+}
+
+.user-profile-image {
+    width: 150px;
+    height: 150px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+}
+
+.user-profile-image img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    display: block;
+}
+
+.user-profile-name {
+    margin: 1rem 0 0.3rem;
+
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.user-profile-admin {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+
+/* Action buttons */
+
+.user-profile-actions {
+    display: flex;
+    justify-content: center;
+
+    gap: 2.5rem;
+
+    margin-top: 2rem;
+    padding-bottom: 1.5rem;
+}
+
+.user-profile-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 0.4rem;
+
+    cursor: pointer;
+}
+
+.user-profile-action p {
+    margin: 0;
+
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.user-profile-action-icon {
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 50%;
+
+    background: #f1f1f1;
+
+    color: #3390ec;
+
+    transition: 0.2s ease;
+}
+
+.user-profile-action:hover .user-profile-action-icon {
+    background: #e5e5e5;
+    transform: scale(1.08);
+}

@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { createGroup } from "../../../../app/action/auth.action.js";
-import clientServer from "../../../../config/axios.js";
+import { createGroup } from "../../app/action/auth.action.js";
+import clientServer from "../../config/axios.js";
 import "./createGroup.css";
-export function CreateGroup({ closeModal, changeTab }) {
+export function CreateGroup({ mode ,group,  closeModal, changeTab }) {
   const [profilePhoto, setProfilePhoto] = useState(
     "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
   );
@@ -49,7 +49,7 @@ export function CreateGroup({ closeModal, changeTab }) {
     }
   };
   const filteredUsers = users.filter(
-    (user) => !selectedUsers.some((selected) => selected._id === user._id),
+    (user) =>  user._id !== auth.UserId && !selectedUsers.some((selected) => selected._id === user._id),
   );
   const handleRemoveUser = (id) => {
     setSelectedUsers((prev) => {

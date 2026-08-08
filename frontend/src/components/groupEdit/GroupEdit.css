@@ -1,0 +1,146 @@
+.Group-edit {
+  height: 100%;
+  width: 100%;
+}
+.group-info-header {
+  margin-top: 1.1rem;
+  display: flex;
+  gap: 2rem;
+  font-size: 1.2rem;
+  flex-direction: row;
+  align-items: center;
+  margin-left: 10px;
+  justify-content: space-between;
+  margin-bottom:1.1rem;
+}
+.nameAndHeader {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+.icon-div-editPage {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.icon-div-editPage:hover {
+  transform: scale(1.1);
+  background-color: rgb(236, 233, 233);
+}
+.profile-photo-wrapper {
+    
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: auto;
+}
+
+.profile-photo-label {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.profilePhoto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+.photo-hover-overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.2);
+
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.profile-photo-label:hover .photo-hover-overlay {
+    opacity: 1;
+}
+
+.edit-photo-icon {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    transition: transform 0.2s ease;
+}
+
+.edit-photo-icon i {
+    font-size: 17px;
+    color: #f4f7f4;
+}
+
+.profile-photo-label:hover .edit-photo-icon {
+    transform: scale(1.05);
+}
+
+.group-name-input {
+    position: relative;
+    width: 90%;
+    margin: 30px auto;
+}
+
+.group-name-input input {
+    width: 100%;
+    height: 52px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1.5px solid #aaa;
+    border-radius: 16px;
+
+    outline: none;
+
+    font-size: 16px;
+    color: #222;
+
+    background: white;
+}
+
+.group-name-input label {
+    position: absolute;
+
+    left: 14px;
+    top: 0;
+
+    transform: translateY(-50%);
+
+    padding: 0 6px;
+
+    background: white;
+
+    font-size: 12px;
+    color: #8b6de8;
+
+    pointer-events: none;
+}
+.group-name-input input:focus {
+    border-color: #8b6de8;
+}
