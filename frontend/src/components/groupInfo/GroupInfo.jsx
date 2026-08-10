@@ -1,10 +1,22 @@
 import "./GroupInfo.css";
+import { createPortal } from "react-dom";
 import { leaveGroup } from "../../app/action/auth.action.js";
-import { useState } from "react";
+import { useState , useEffect , useRef} from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-export function GroupInfo({ group, onAddMember, onLeaveGroup, onCross , onEditClick , onUserClick }) {
+export function GroupInfo({
+  group,
+  onAddMember,
+  onLeaveGroup,
+  onCross,
+  onEditClick,
+  onUserClick,
+}) {
   const [mode, setMode] = useState("view");
+  const [menuPosition, setMenuPosition] = useState(null);
+  const menuRef = useRef(null);
+  const groupInfoRef = useRef(null);
+  const [selectedMember, setSelectedMember] = useState(null);
   const dispatch = useDispatch();
   const handleLeaveGroup = async () => {
     const data = {
@@ -14,18 +26,71 @@ export function GroupInfo({ group, onAddMember, onLeaveGroup, onCross , onEditCl
     await dispatch(leaveGroup(data));
     onLeaveGroup();
   };
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+        if (
+            menuRef.current &&
+            !menuRef.current.contains(e.target)
+        ) {
+            setMenuPosition(null);
+            setSelectedMember(null);
+        }
+    };
+
+    const handleScroll = () => {
+        setMenuPosition(null);
+        setSelectedMember(null);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    const groupInfo = groupInfoRef.current;
+
+    if (groupInfo) {
+        groupInfo.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+        document.removeEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        if (groupInfo) {
+            groupInfo.removeEventListener("scroll", handleScroll);
+        }
+    };
+}, []);
+   useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (menuRef.current && !menuRef.current.contains(e.target)) {
+          setMenuPosition(null);
+          setSelectedMember(null);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+  
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
   return (
     <>
-      <div className="group-info">
+      <div className="group-info" ref={groupInfoRef}>
         <div className="group-info-header">
-          <div className = "nameAndHeader">
+          <div className="nameAndHeader">
             <div className="icon-div-editPage" onClick={onCross}>
               <i class="fa-solid fa-xmark"></i>
             </div>
-            <p  style= {{marginLeft : "1.3rem"}}>Group Info</p>
+            <p style={{ marginLeft: "1.3rem" }}>Group Info</p>
           </div>
 
-          <div onClick = {onEditClick} className="icon-div-editPage" style= {{marginRight : "1.1rem"}}>
+          <div
+            onClick={onEditClick}
+            className="icon-div-editPage"
+            style={{ marginRight: "1.1rem" }}
+          >
             <i class="fa-solid fa-user-pen"></i>
           </div>
         </div>
@@ -60,21 +125,86 @@ export function GroupInfo({ group, onAddMember, onLeaveGroup, onCross , onEditCl
         </div>
         {group.members.map((member) => {
           return (
-            <div className="member-card" onClick={() => onUserClick(member)}  key={member._id}>
-              <div className="pic">
-                <img src={member.profilePic} />
+            <div
+              className="member-card"
+              onClick={() => {
+                onUserClick(member);
+              }}
+              key={member._id}
+            >
+              <div className="member-card-info">
+                <div className="pic">
+                  <img src={member.profilePic} />
+                </div>
+
+                <div className="member-info">
+                  <p>{member.username}</p>
+
+                  {group.admin.toString() === member._id && (
+                    <span className="admin-block">Admin</span>
+                  )}
+                </div>
               </div>
+              <div
+                className="three-dot"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const menuWidth = 160;
+                  const menuHeight = 100;
+                  const gap = 8;
 
-              <div className="member-info">
-                <p>{member.username}</p>
+                  const spaceRight = window.innerWidth - e.clientX;
+                  const spaceBottom = window.innerHeight - e.clientY;
 
-                {group.admin.toString() === member._id && (
-                  <span className="admin-block">Admin</span>
-                )}
+                  let x;
+                  let y = e.clientY;
+                  if (spaceRight < menuWidth + gap) {
+                    x = e.clientX - menuWidth - gap;
+                  } else {
+                    x = e.clientX + gap;
+                  }
+
+                 
+                  if (spaceBottom < menuHeight) {
+                    y = e.clientY - menuHeight;
+                  }
+
+                  setSelectedMember(member);
+
+                  setMenuPosition({
+                    x,
+                    y,
+                  });
+                }}
+              >
+                {" "}
+                <i class="fa-solid fa-ellipsis-vertical"></i>{" "}
               </div>
             </div>
           );
         })}
+        {menuPosition &&
+          selectedMember &&
+          createPortal(
+            <div
+              className="admin-option-list"
+              ref = {menuRef}
+              style={{
+                left: menuPosition.x,
+                top: menuPosition.y,
+              }}
+            >
+              <div className="admin-option">
+                <i className="fa-solid fa-user-shield"></i>
+                <span>Make Admin</span>
+              </div>
+              <div className="admin-option">
+                <i className="fa-solid fa-user-minus"></i>
+                <span>Remove</span>
+              </div>
+            </div>,
+            document.body,
+          )}
       </div>
     </>
   );

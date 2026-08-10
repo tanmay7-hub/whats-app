@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import clientServer from "../../config/axios.js";
+import { createPortal } from "react-dom";
 import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
 import { CreateGroup } from "../../components/createGroup/CreateGroup.jsx";
 import { CSSTransition } from "react-transition-group";
@@ -297,6 +298,7 @@ function Chat() {
   }, []);
   useEffect(() => {
     const closeMenu = () => {
+      setReactionMenu(null);
       setMenuPosition(null);
       setMenuMessage(null);
     };
@@ -552,6 +554,7 @@ function Chat() {
                           setMsg("");
                           setImage(null);
                           setImagePreview(null);
+                          setGroupPage("");
                           dispatch(
                             setCurrentConversation({
                               type: "user",
@@ -563,7 +566,7 @@ function Chat() {
                               members: [],
                             }),
                           );
-                
+
                           socket.emit("chat-opened", {
                             senderId: user._id,
                           });
@@ -610,8 +613,6 @@ function Chat() {
                             members: group.members,
                           }),
                         );
-
-                       
 
                         dispatch(getGroupChat(group._id));
                       }}
@@ -669,7 +670,7 @@ function Chat() {
                   </div>
                 </div>
               </div>
-              <div className="messages-container">
+              <div  className="messages-container">
                 {auth.currChat.length === 0 && (
                   <div className="initialStarting-div">
                     Start chat with a wave 👋
@@ -683,7 +684,6 @@ function Chat() {
                     const showSender =
                       conversation.type === "group" &&
                       (idx === 0 || prev.senderId._id !== m.senderId._id);
-                    // const sameSenderAsPrevious = idx > 0 && prev.senderId._id === m.senderId._id && prev.senderId._id !== auth.UserId;
                     return m.senderId._id !== auth.UserId ? (
                       <div className={`group-message-wrapper`}>
                         {conversation.type === "group" && (
@@ -697,6 +697,21 @@ function Chat() {
                           </div>
                         )}
                         <div
+                          // onContextMenu={(e) => {
+                          //   if (m.deletedforEveryone) return;
+                          //   e.preventDefault();
+                          //   setMenuMessage(m);
+                          //   setMenuPosition({
+                          //     x: e.clientX + 15,
+                          //     y: e.clientY - 5,
+                          //   });
+
+                          //   setReactionMenu({
+                          //     x: e.clientX + 15,
+                          //     y: e.clientY - 65,
+                          //   });
+                          // }}
+
                           onContextMenu={(e) => {
                             if (m.deletedforEveryone) return;
                             e.preventDefault();
@@ -863,53 +878,69 @@ function Chat() {
                       </div>
                     );
                   })}
-                {menuPosition && (
-                  <div
-                    className="context-menu"
-                    style={{
-                      left: menuPosition.x,
-                      top: menuPosition.y,
-                    }}
-                  >
-                    <div className="context-option" onClick={handleReply}>
-                      <i className="fa-solid fa-reply"></i>
-                      <span>Reply</span>
-                    </div>
-
-                    {!(menuMessage.senderId._id !== auth.UserId) && (
-                      <div
-                        className="context-option"
-                        onClick={handleDeleteForEveryone}
-                      >
-                        <i class="fa-solid fa-trash-can"></i>
-                        <span>Delete</span>
+                {menuPosition &&
+                  createPortal(
+                    <div
+                      className="context-menu"
+                      // style={{
+                      //   left: menuPosition.x,
+                      //   top: menuPosition.y,
+                      // }}
+                      style={{
+                        position: "fixed",
+                        left: `${menuPosition.x}px`,
+                        top: `${menuPosition.y}px`,
+                      }}
+                    >
+                      <div className="context-option" onClick={handleReply}>
+                        <i className="fa-solid fa-reply"></i>
+                        <span>Reply</span>
                       </div>
-                    )}
-                  </div>
-                )}
-                {reactionMenu && (
-                  <div
-                    style={{
-                      left: reactionMenu.x,
-                      top: reactionMenu.y,
-                    }}
-                    className="reaction-div"
-                  >
-                    {["👍", "❤️", "😂", "😮", "😢", "🙏"].map((emoji, idx) => {
-                      return (
+
+                      {!(menuMessage.senderId._id !== auth.UserId) && (
                         <div
-                          key={idx}
-                          onClick={() => {
-                            handleReaction(menuMessage, emoji);
-                          }}
-                          className="emoji-div"
+                          className="context-option"
+                          onClick={handleDeleteForEveryone}
                         >
-                          {emoji}
+                          <i class="fa-solid fa-trash-can"></i>
+                          <span>Delete</span>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                      )}
+                    </div>,
+                    document.body,
+                  )}
+                {reactionMenu &&
+                  createPortal(
+                    <div
+                      // style={{
+                      //   left: reactionMenu.x,
+                      //   top: reactionMenu.y,
+                      // }}
+                      style={{
+                        position: "fixed",
+                        left: `${reactionMenu.x}px`,
+                        top: `${reactionMenu.y}px`,
+                      }}
+                      className="reaction-div"
+                    >
+                      {["👍", "❤️", "😂", "😮", "😢", "🙏"].map(
+                        (emoji, idx) => {
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                handleReaction(menuMessage, emoji);
+                              }}
+                              className="emoji-div"
+                            >
+                              {emoji}
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>,
+                    document.body,
+                  )}
 
                 {typingUserId && (
                   <div className="typing-div other-message">
@@ -1118,7 +1149,7 @@ function Chat() {
                 {selectedUser && (
                   <UserProfile
                     user={selectedUser}
-                    onBack={() => setGroupPage("info")}
+                    onCross={() => setGroupPage("")}
                   />
                 )}
               </div>

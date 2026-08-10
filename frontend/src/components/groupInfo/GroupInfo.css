@@ -1,13 +1,6 @@
 .group-info{
-    /* width:30%;
-    height:100%;
-    border-radius:15px;
-    margin-left:1.1rem; 
-    display:flex;
-    flex-direction:column;
-    background-color:white;
-    overflow-y:scroll; */
-   
+
+   position:relative;
     height: 100%;
     margin-left: 1rem;
     background: #fff;
@@ -108,6 +101,7 @@
 }
 
 .icon-circle i{
+    /* color:rgb(93, 207, 252); */
     font-size:1.3rem;
 }
 .member-card .pic >img{
@@ -123,8 +117,29 @@
     border-radius:13px;
     transition:.2s;
     cursor:pointer;
+    justify-content:space-between;
     
-    
+}
+.member-card-info{
+    display:flex;
+    justify-content : center;
+    /* align-items:center; */
+}
+.member-card .three-dot{
+    height:40px;
+    width:40px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+  
+    align-items:center;
+    /* margin-right: 0.6rem; */
+}
+.member-card:has(.three-dot:hover){
+    background-color: white;
+}
+.member-card .three-dot:hover{
+    background-color:rgb(192, 191, 191);
 }
 .member-card:hover{
     background:#f6f6f6;
@@ -162,4 +177,42 @@
 .members-header span{
     color:rgb(156, 156, 156);
     font-size:0.9rem;
+}
+.admin-option-list{
+    position: fixed;
+
+    min-width: 160px;
+
+    background: rgba(255, 255, 255, 0.95);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-radius: 12px;
+
+    padding: 4px;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+
+    z-index: 99999;
+}
+
+.admin-option  i{
+   padding-right:12px;
+}
+.admin-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-radius:12px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.admin-option:hover{
+    background-color: rgba(15, 14, 14, 0.171);
+}
+.admin-option span{
+    font-size:0.8rem;
+    padding-right:12px;
 }

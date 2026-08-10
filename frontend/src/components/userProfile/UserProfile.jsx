@@ -1,7 +1,6 @@
 import "./UserProfile.css";
 
-export function UserProfile({ user, onBack }) {
-    console.log(user);
+export function UserProfile({ user, onCross }) {
   return (
     <div className="user-profile">
 
@@ -9,12 +8,12 @@ export function UserProfile({ user, onBack }) {
       <div className="user-profile-header">
         <div
           className="user-profile-back"
-          onClick={onBack}
+          onClick={onCross}
         >
-          <i className="fa-solid fa-arrow-left"></i>
+           <i class="fa-solid fa-xmark"></i>
         </div>
 
-        <p>User Info</p>
+        <p> User Info </p>
       </div>
 
       
@@ -35,7 +34,7 @@ export function UserProfile({ user, onBack }) {
 
       <div className="user-profile-actions">
 
-        <div className="user-profile-action">
+        <div className="user-profile-action" onClick ={onCross}>
           <div className="user-profile-action-icon">
             <i className="fa-solid fa-message"></i>
           </div>
