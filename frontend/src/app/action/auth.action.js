@@ -148,7 +148,6 @@ export const removeMember = createAsyncThunk(
         },
       }
       );
-
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(

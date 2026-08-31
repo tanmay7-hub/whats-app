@@ -20,7 +20,7 @@ const socketToUser = {};
 
 io.on("connection", (socket) => {
   console.log(`socket connected :${socket.id}`);
-
+ 
   socket.on("user-logged-in", async (data) => {
     await User.updateOne({ _id: data.id }, { $set: { isOnline: true } });
 
@@ -51,6 +51,22 @@ io.on("connection", (socket) => {
 
     io.emit("refresh-users");
   });
+  // socket.on("offer" , async(data)=>{
+  //       const {receiverId , offer} = [data.receiverId , ...data];
+  //       const receiverSocketId = onlineUser[receiverId.toString()];
+  //       const senderSocketId = socket.id;
+
+
+  //       if(receiverSocketId){
+            
+  //          socket.to(receiverId).emit("offer-Receiver" , offer);
+  //       }else{
+          
+  //         socket.to(senderSocketId).emit("user-offline");
+          
+  //       }
+        
+  // });
   socket.on("chat-opened", async (data) => {
     const senderId = data.senderId;
     const receiverId = socketToUser[socket.id];

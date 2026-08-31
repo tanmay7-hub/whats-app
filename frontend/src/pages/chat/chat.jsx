@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
 import { CreateGroup } from "../../components/createGroup/CreateGroup.jsx";
 import { CSSTransition } from "react-transition-group";
+import { VideoCall } from "../../components/CallComponent/VideoCall.jsx"
 import {
   getUser,
   getAllGroups,
@@ -73,6 +74,7 @@ function Chat() {
   const [showGroupEdit, setShowGroupEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [groupPage, setGroupPage] = useState("");
+  const [showVideoCall , setShowVideoCall] = useState(false);
 
   const tabs = ["Chats", "Groups", "Calls"];
 
@@ -522,8 +524,9 @@ function Chat() {
                     className="profile-option logout"
                     onClick={() => {
                       setShowProfileMenu(false);
+                      logout();
                     }}
-                    onClick={logout}
+                   
                   >
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     Logout
@@ -669,6 +672,13 @@ function Chat() {
                     </p>
                   </div>
                 </div>
+                <div className ="call-icons">
+                        <div  className = "call-icon"><i class="fa-solid fa-phone"></i></div>
+                        <div onClick ={()=>{
+                             setShowVideoCall(true);
+                        }} className = "call-icon"><i class="fa-solid fa-video"></i></div>
+                </div>
+                
               </div>
               <div  className="messages-container">
                 {auth.currChat.length === 0 && (
@@ -697,21 +707,6 @@ function Chat() {
                           </div>
                         )}
                         <div
-                          // onContextMenu={(e) => {
-                          //   if (m.deletedforEveryone) return;
-                          //   e.preventDefault();
-                          //   setMenuMessage(m);
-                          //   setMenuPosition({
-                          //     x: e.clientX + 15,
-                          //     y: e.clientY - 5,
-                          //   });
-
-                          //   setReactionMenu({
-                          //     x: e.clientX + 15,
-                          //     y: e.clientY - 65,
-                          //   });
-                          // }}
-
                           onContextMenu={(e) => {
                             if (m.deletedforEveryone) return;
                             e.preventDefault();
@@ -1169,6 +1164,10 @@ function Chat() {
             />
           </div>
         )}
+        {showVideoCall &&<div className ="modal-overlay">
+               <VideoCall  currentConvo = {auth.currentConversation}/>
+        </div>}
+         
       </div>
     </>
   );

@@ -273,8 +273,21 @@
   border-bottom: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
-
+  justify-content:space-between;
   padding: 1rem;
+}
+.call-icons{
+  display:flex;
+  gap:1.1rem;
+  margin-right :3rem;
+  font-size:1.5rem;
+  color:#57b2fc;
+}
+.call-icon{
+  transition:all 0.2s;
+}
+.call-icons .call-icon:hover{
+   transform:scale(1.2);
 }
 .chat-user-info {
   display: flex;

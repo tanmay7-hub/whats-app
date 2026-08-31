@@ -188,6 +188,8 @@ export const removeMember = async (req, res) => {
     });
   }
 };
+// export const makeAdmin = async(req , res) => {
+// };
 export const updateGroup = async (req, res) => {
   try {
     const { groupId, name, groupImage } = req.body;

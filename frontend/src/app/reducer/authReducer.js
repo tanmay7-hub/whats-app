@@ -272,7 +272,7 @@ const counterSlice = createSlice({
       .addCase(removeMember.fulfilled, (state, action) => {
         const updatedGroup = action.payload.group;
 
-        state.groups = state.groups.map((group) =>
+        state.allGroups = state.allGroups.map((group) =>
           group._id === updatedGroup._id ? updatedGroup : group,
         );
 

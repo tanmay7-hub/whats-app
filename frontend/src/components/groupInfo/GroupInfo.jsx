@@ -1,6 +1,6 @@
 import "./GroupInfo.css";
 import { createPortal } from "react-dom";
-import { leaveGroup } from "../../app/action/auth.action.js";
+import { leaveGroup , removeMember} from "../../app/action/auth.action.js";
 import { useState , useEffect , useRef} from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -18,6 +18,9 @@ export function GroupInfo({
   const groupInfoRef = useRef(null);
   const [selectedMember, setSelectedMember] = useState(null);
   const dispatch = useDispatch();
+  const auth = useSelector(state => state.auth);
+
+  
   const handleLeaveGroup = async () => {
     const data = {
       groupId: group.id,
@@ -26,6 +29,19 @@ export function GroupInfo({
     await dispatch(leaveGroup(data));
     onLeaveGroup();
   };
+  const handleRemove = async()=>{
+    const data = { 
+       groupId: group.id,
+       memberId:selectedMember._id
+     }
+      await dispatch(removeMember(data));
+            setMenuPosition(null);
+            setSelectedMember(null);
+     
+  };
+  const handleMakeAdmin = async()=>{
+
+  }
   useEffect(() => {
     const handleClickOutside = (e) => {
         if (
@@ -145,7 +161,7 @@ export function GroupInfo({
                   )}
                 </div>
               </div>
-              <div
+              {group.admin.toString() === auth.UserId && member._id !== auth.UserId &&  <div
                 className="three-dot"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -179,11 +195,11 @@ export function GroupInfo({
               >
                 {" "}
                 <i class="fa-solid fa-ellipsis-vertical"></i>{" "}
-              </div>
+              </div>}
             </div>
           );
         })}
-        {menuPosition &&
+        {  menuPosition &&
           selectedMember &&
           createPortal(
             <div
@@ -194,11 +210,11 @@ export function GroupInfo({
                 top: menuPosition.y,
               }}
             >
-              <div className="admin-option">
+              <div className="admin-option" onClick = {handleMakeAdmin}>
                 <i className="fa-solid fa-user-shield"></i>
                 <span>Make Admin</span>
               </div>
-              <div className="admin-option">
+              <div className="admin-option" onClick = {handleRemove}>
                 <i className="fa-solid fa-user-minus"></i>
                 <span>Remove</span>
               </div>
