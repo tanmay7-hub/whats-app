@@ -51,6 +51,23 @@ io.on("connection", (socket) => {
 
     io.emit("refresh-users");
   });
+
+  socket.on("offer" , ({to , from , offer})=>{
+
+      const socketId = onlineUser[to];
+      if(socketId)socket.to(socketId).emit("offer" , {offer , from});
+  });
+  socket.on("answer" , ({to , answer})=>{
+       const socketId = onlineUser[to];
+
+       if(socketId) socket.to(socketId).emit("answer" , answer);
+  });
+  socket.on("ice-candidate", ({to , from , candidate })=>{
+        const socketId = onlineUser[to];
+
+        if(socketId) socket.to(socketId).emit("ice-candidate" , candidate);
+  });
+
   // socket.on("offer" , async(data)=>{
   //       const {receiverId , offer} = [data.receiverId , ...data];
   //       const receiverSocketId = onlineUser[receiverId.toString()];

@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
 import { CreateGroup } from "../../components/createGroup/CreateGroup.jsx";
 import { CSSTransition } from "react-transition-group";
-import { VideoCall } from "../../components/CallComponent/VideoCall.jsx"
+import { VideoCall } from "../../components/CallComponent/VideoCall.jsx";
 import {
   getUser,
   getAllGroups,
@@ -74,8 +74,8 @@ function Chat() {
   const [showGroupEdit, setShowGroupEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [groupPage, setGroupPage] = useState("");
-  const [showVideoCall , setShowVideoCall] = useState(false);
-
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [isCaller , setIsCaller] = useState(false);
   const tabs = ["Chats", "Groups", "Calls"];
 
   const handleBack = () => {
@@ -526,7 +526,6 @@ function Chat() {
                       setShowProfileMenu(false);
                       logout();
                     }}
-                   
                   >
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     Logout
@@ -672,15 +671,21 @@ function Chat() {
                     </p>
                   </div>
                 </div>
-                <div className ="call-icons">
-                        <div  className = "call-icon"><i class="fa-solid fa-phone"></i></div>
-                        <div onClick ={()=>{
-                             setShowVideoCall(true);
-                        }} className = "call-icon"><i class="fa-solid fa-video"></i></div>
+                <div className="call-icons">
+                  <div className="call-icon">
+                    <i class="fa-solid fa-phone"></i>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowVideoCall(true);
+                    }}
+                    className="call-icon"
+                  >
+                    <i class="fa-solid fa-video"></i>
+                  </div>
                 </div>
-                
               </div>
-              <div  className="messages-container">
+              <div className="messages-container">
                 {auth.currChat.length === 0 && (
                   <div className="initialStarting-div">
                     Start chat with a wave 👋
@@ -1164,10 +1169,32 @@ function Chat() {
             />
           </div>
         )}
-        {showVideoCall &&<div className ="modal-overlay">
-               <VideoCall  currentConvo = {auth.currentConversation}/>
-        </div>}
-         
+
+        <button
+          onClick={() => {
+            setIsCaller(true);
+            
+          }}
+        >
+          Caller
+        </button>
+
+        <button
+          onClick={() => {
+            setIsCaller(false);
+            setShowVideoCall(true);
+          }}
+        >
+          Receiver
+        </button>
+        {showVideoCall && (
+          <div className="modal-overlay">
+            <VideoCall
+              isCaller={isCaller}
+              currentConvo={auth.currentConversation}
+            />
+          </div>
+        )}
       </div>
     </>
   );
