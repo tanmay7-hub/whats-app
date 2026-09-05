@@ -10,7 +10,6 @@ export function VideoCall({ isCaller, currentConvo }) {
   const pendingIceCandidatesRef = useRef([]);
   useEffect(() => {
     const handleAnswer = async (answer) => {
-      console.log("ANSWER RECEIVED BY", socket.id);
       const peer = peerRef.current;
       if (!peer) return;
       await peer.setRemoteDescription(answer);
@@ -28,10 +27,8 @@ export function VideoCall({ isCaller, currentConvo }) {
   }, []);
   useEffect(() => {
     const handleOffer = async ({ offer, from }) => {
-      console.log("OFFER RECEIVED BY", socket.id);
       const peer = peerRef.current;
       if (!peer) {
-        console.log("Peer not ready");
         return;
       }
 
@@ -43,8 +40,6 @@ export function VideoCall({ isCaller, currentConvo }) {
       const answer = await peer.createAnswer();
 
       await peer.setLocalDescription(answer);
-
-      console.log("ANSWER EVENT EMITTED BY ", socket.id);
       socket.emit("answer", { to: from, answer });
     };
 
@@ -56,7 +51,6 @@ export function VideoCall({ isCaller, currentConvo }) {
   }, []);
   useEffect(() => {
     const handleIceCandidate = async (candidate) => {
-      console.log("ICE EVENT RECEIVED BY ", socket.id);
       const peer = peerRef.current;
       if (!peer) return;
       if (peer.remoteDescription) {
@@ -74,6 +68,7 @@ export function VideoCall({ isCaller, currentConvo }) {
   }, []);
   useEffect(() => {
     async function startCamera() {
+      console.log("start camera ");
       try {
         const initializePeer = async () => {
           streamRef.current = await navigator.mediaDevices.getUserMedia({
@@ -85,49 +80,20 @@ export function VideoCall({ isCaller, currentConvo }) {
             vidRef.current.srcObject = streamRef.current;
           }
 
-          const peer = new RTCPeerConnection();
+          const peer = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+          });
 
           peerRef.current = peer;
 
           peer.ontrack = (event) => {
-            console.log("REMOTE TRACK RECEIVED");
-            console.log("kind:", event.track.kind);
 
-            const video = remoteVidRef.current;
-            const remoteStream = event.streams[0];
-
-            if (!video || !remoteStream) return;
-
-            console.log("Remote tracks:", remoteStream.getTracks());
-
-            if (video.srcObject === remoteStream) {
-              console.log("Stream already attached");
-              return;
-            }
-
-            video.srcObject = remoteStream;
-
-            video.onloadedmetadata = () => {
-              console.log("REMOTE METADATA LOADED");
-              console.log("Dimensions:", video.videoWidth, video.videoHeight);
-
-              video
-                .play()
-                .then(() => {
-                  console.log("REMOTE VIDEO PLAYING");
-                })
-                .catch((err) => {
-                  console.error("REMOTE VIDEO PLAY ERROR:", err);
-                });
-            };
+            const [remoteStream] = event.streams;
+            
+            remoteVidRef.current.srcObject = remoteStream;
           };
 
           streamRef.current.getTracks().forEach((track) => {
-            console.log("SENDER VIDEO TRACK", {
-              enabled: track.enabled,
-              readyState: track.readyState,
-              muted: track.muted,
-            });
             peer.addTrack(track, streamRef.current);
           });
 
@@ -136,20 +102,8 @@ export function VideoCall({ isCaller, currentConvo }) {
 
         const { peer } = await initializePeer();
 
-        peer.onconnectionstatechange = () => {
-          console.log("Connection state:", peer.connectionState);
-        };
-
-        peer.oniceconnectionstatechange = () => {
-          console.log("ICE state:", peer.iceConnectionState);
-        };
-
-        peer.onsignalingstatechange = () => {
-          console.log("Signaling state:", peer.signalingState);
-        };
         peer.onicecandidate = (event) => {
           if (event.candidate) {
-            console.log("ICE EVENT EMITTED BY:", socket.id);
             socket.emit("ice-candidate", {
               to: currentConvo.id,
               from: socket.id,
@@ -157,11 +111,11 @@ export function VideoCall({ isCaller, currentConvo }) {
             });
           }
         };
+
         if (isCaller) {
           const offer = await peer.createOffer();
           await peer.setLocalDescription(offer);
 
-          console.log("OFFER SENDING TO:", currentConvo.id);
           socket.emit("offer", {
             to: currentConvo.id,
             from: socket.id,
@@ -189,46 +143,32 @@ export function VideoCall({ isCaller, currentConvo }) {
         <div className="remote-vid-div">
           <video
             ref={remoteVidRef}
-            autoPlay
-            muted
-            playsInline
             style={{
               width: "100%",
               height: "100%",
               objectFit: "contain",
             }}
+            muted
+            autoPlay
+            playsInline
           />
-          <div className="call-name"></div>
-
-          <div className="video-div">
-            <video
-              ref={vidRef}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-              }}
-              muted
-              autoPlay
-              playsInline
-            />
-          </div>
-
-          <div className="button">
-            <div>
-              {" "}
-              <i className="fa-solid fa-microphone-slash"></i>{" "}
-            </div>
-            <div>
-              {" "}
-              <i className="fa-solid fa-phone"></i>{" "}
-            </div>
-            <div>
-              {" "}
-              <i className="fa-solid fa-video-slash"></i>{" "}
-            </div>
-          </div>
         </div>
+
+        <div className="video-div">
+          <video
+            ref={vidRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }}
+            muted
+            autoPlay
+            playsInline
+          />
+        </div>
+
+        
       </div>
     </>
   );

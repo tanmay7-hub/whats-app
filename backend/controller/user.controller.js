@@ -264,10 +264,16 @@ export const createGroup = async (req, res) => {
 };
 export const getCurrUser = async (req, res) => {
   try {
-    return res.json({
-      user: req.user,
-      msg: "workingg profile ",
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+   
+    return res.status(200).json({
+      userId: user._id,
+      name : user.username,
+      profileImage: user.profilePic,
     });
+
   } catch (err) {
     return res
       .status(500)
@@ -396,6 +402,7 @@ export const login = async (req, res) => {
     return res.status(200).json({
       token: token,
       userId: user._id,
+      name : user.username,
       profileImage: user.profilePic,
     });
   } catch (err) {

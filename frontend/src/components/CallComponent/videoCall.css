@@ -9,7 +9,7 @@
     width:100%;
     position:relative;
 }
-.callName{
+.call-name{
     position:absolute;
 }
 .video-div{
@@ -18,17 +18,15 @@
     border-radius:10px;
     top:60%;
     right:1.4rem;
-    /* box-shadow: 0px 10px 20px rgba(61, 151, 236, 0.966); */
     overflow:hidden;
 }
-.video-div video{
+.video-div  video{
     height:auto;
     width:100%;
     display:block;
-    
+     
 }
-.buttons{
+.button{
     position:absolute;
-    top:0;
-    
+    top:0;  
 }

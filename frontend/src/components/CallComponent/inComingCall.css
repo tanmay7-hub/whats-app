@@ -1,0 +1,77 @@
+.incomingCall-mainContainer{
+    height: 90%;
+    width: 50%;
+    overflow:hidden;
+    border-radius:1.3rem;
+    background-color:white;
+    padding:1.5rem;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    background: #e80e32;
+    background: radial-gradient(circle,rgb(3, 116, 221) 0%, rgb(183, 167, 241) 50%, rgba(148, 187, 233, 1) 100%);
+    /* background: linear-gradient(90deg, #f8ff00 0%, #3ad59f 100%); */
+    background-size:200% 200%;
+    animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift{
+    0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.incomingCall-mainContainer .top-div .profile-div{
+    
+}
+.incomingCall-mainContainer .top-div .profile-div img{
+    height:6rem;
+    width:6rem;
+
+}
+.incomingCall-button{
+    display:flex;
+    flex-direction:row;
+    padding-inline : 1.5rem; 
+    justify-content:space-evenly;
+    align-items:center;
+    margin-bottom:3rem;
+}
+.incomingCall-button >div .icon{
+    
+    border-radius:50%;
+    height:50px;
+    width:50px;
+    display:flex;
+    
+    align-items:center;
+    justify-content:center;
+}
+.incomingCall-button >div:nth-child(1) .icon{
+    background-color:rgb(238, 39, 39);
+}
+.incomingCall-button >div:nth-child(2) .icon{
+    background-color:rgb(28, 228, 28);
+}
+.incomingCall-info-div{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.incomingCall-info-div p:nth-child(odd){
+    font-size:1.3rem;
+    margin-top:1.2rem;
+    font-weight:500;
+}
+.incomingCall-info-div p:nth-child(even){
+    font-size:1.1rem;
+    font-weight:400;
+}
+

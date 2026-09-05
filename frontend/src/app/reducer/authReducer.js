@@ -18,6 +18,7 @@ const initialState = {
     profilePic:
       "https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
     userId: undefined,
+    name :undefined,
   },
   isTokenThere: false,
   token: undefined,
@@ -129,6 +130,7 @@ const counterSlice = createSlice({
         state.isLoggedIn = true;
         state.loggedInUser.profilePic = action.payload.profileImage;
         state.loggedInUser.userId = action.payload.userId;
+        state.loggedInUser.name = action.payload.name,
         state.UserId = action.payload.userId;
       })
       .addCase(login.rejected, (state, action) => {
@@ -199,7 +201,11 @@ const counterSlice = createSlice({
       .addCase(getCurrUser.fulfilled, (state, action) => {
         state.isError = false;
         state.isLoading = false;
-        state.UserId = action.payload.user.id;
+        state.loggedInUser.profilePic = action.payload.profileImage;
+        state.loggedInUser.userId = action.payload.userId;
+        state.loggedInUser.name = action.payload.name,
+        state.UserId = action.payload.userId;
+      
       })
       .addCase(getCurrUser.rejected, (state, action) => {
         state.isError = true;

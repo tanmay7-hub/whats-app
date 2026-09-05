@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import clientServer from "../../config/axios.js";
 import { createPortal } from "react-dom";
 import MusicPlayer from "../../components/musicPlayer/musicPlayer.jsx";
+import InComingCall from "../../components/CallComponent/inComingCall.jsx"
+import CallingScreen from "../../components/CallComponent/callingScreen.jsx"
 import { CreateGroup } from "../../components/createGroup/CreateGroup.jsx";
 import { CSSTransition } from "react-transition-group";
 import { VideoCall } from "../../components/CallComponent/VideoCall.jsx";
@@ -75,7 +77,11 @@ function Chat() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [groupPage, setGroupPage] = useState("");
   const [showVideoCall, setShowVideoCall] = useState(false);
-  const [isCaller , setIsCaller] = useState(false);
+  const [isCaller, setIsCaller] = useState(false);
+  const [showCallingScreen, setShowCallingScreen] = useState(false);
+  const [incomingCallDetail, setIncomingCallDetail] = useState(null);
+  const [showIncomingScreen, setShowIncomingScreen] = useState(false);
+  const [callData, setCallData] = useState(null);
   const tabs = ["Chats", "Groups", "Calls"];
 
   const handleBack = () => {
@@ -131,6 +137,43 @@ function Chat() {
     setMenuPosition(null);
     setMenuMessage(null);
   };
+  // video call ui from here
+  useEffect(() => {
+    const handleIncomingCall = (data) => {
+      setIncomingCallDetail(data);
+      setShowIncomingScreen(true);
+    };
+    socket.on("incoming-call", handleIncomingCall);
+
+    return () => {
+      socket.off("incoming-call", handleIncomingCall);
+    }
+  }, [])
+
+  
+  const handleClickedVideoCall = () => {
+    const data = auth.currentConversation;
+
+    setCallData(data);
+    setShowCallingScreen(true);
+
+    socket.emit("call-user", {
+      to: data.id,
+      caller: {
+        id: auth.loggedInUser.userId,
+        name: auth.loggedInUser.name,
+        profilePic: auth.loggedInUser.profilePic
+      }
+    });
+
+  }
+  const handleVideoCallAnswer = ()=>{
+        
+  };
+  // till here
+
+
+
   useEffect(() => {
     const handler = async (data) => {
       dispatch(updateReaction(data));
@@ -347,7 +390,7 @@ function Chat() {
   //details about curr user
   useEffect(() => {
     if (localStorage.getItem("token") !== null) {
-      dispatch(getCurrUser());
+        dispatch(getCurrUser());
     }
   }, []);
 
@@ -676,9 +719,7 @@ function Chat() {
                     <i class="fa-solid fa-phone"></i>
                   </div>
                   <div
-                    onClick={() => {
-                      setShowVideoCall(true);
-                    }}
+                    onClick={handleClickedVideoCall}
                     className="call-icon"
                   >
                     <i class="fa-solid fa-video"></i>
@@ -804,11 +845,10 @@ function Chat() {
                             y: e.clientY - 65,
                           });
                         }}
-                        className={`${
-                          m.senderId._id === auth.UserId
-                            ? "my-message"
-                            : "other-message"
-                        } ${m.audioUrl ? "audio-bubble" : ""}`}
+                        className={`${m.senderId._id === auth.UserId
+                          ? "my-message"
+                          : "other-message"
+                          } ${m.audioUrl ? "audio-bubble" : ""}`}
                       >
                         {!m.deletedforEveryone && m.replyTo && (
                           <div className="reply-preview">
@@ -1170,23 +1210,6 @@ function Chat() {
           </div>
         )}
 
-        <button
-          onClick={() => {
-            setIsCaller(true);
-            
-          }}
-        >
-          Caller
-        </button>
-
-        <button
-          onClick={() => {
-            setIsCaller(false);
-            setShowVideoCall(true);
-          }}
-        >
-          Receiver
-        </button>
         {showVideoCall && (
           <div className="modal-overlay">
             <VideoCall
@@ -1195,6 +1218,26 @@ function Chat() {
             />
           </div>
         )}
+
+       
+        {showCallingScreen && <div className="modal-overlay">
+          <CallingScreen
+            caller={auth.currentConversation}
+          />
+        </div>}
+     
+        {showIncomingScreen && <div className="modal-overlay">
+          <InComingCall
+            caller={incomingCallDetail}
+            onDecline={() => {
+              setIncomingCallDetail(null);
+              setShowIncomingScreen(false);
+            }}
+            onAnswer = {handleVideoCallAnswer}
+            
+           />
+        </div>}
+
       </div>
     </>
   );

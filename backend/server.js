@@ -51,39 +51,33 @@ io.on("connection", (socket) => {
 
     io.emit("refresh-users");
   });
+  // calling 
+  socket.on("call-user", (data)=>{
+    const socketId = onlineUser[data.to];
+    if(socketId ){
+  
+      socket.to(socketId).emit("incoming-call" , data.caller);
+    }
 
-  socket.on("offer" , ({to , from , offer})=>{
+  }); 
+
+  //webrtc events 
+  socket.on("offer" , ({to , from , offer})=>{// to -> userId ,  from -> socketId
 
       const socketId = onlineUser[to];
       if(socketId)socket.to(socketId).emit("offer" , {offer , from});
   });
-  socket.on("answer" , ({to , answer})=>{
-       const socketId = onlineUser[to];
-
-       if(socketId) socket.to(socketId).emit("answer" , answer);
+  socket.on("answer" , ({to , answer})=>{// to->socketId
+       const socketId = to;
+       
+       if(socketId ) socket.to(socketId).emit("answer" , answer);
   });
-  socket.on("ice-candidate", ({to , from , candidate })=>{
+  socket.on("ice-candidate", ({to , from , candidate })=>{ // to -> userId ,  from -> socketId
         const socketId = onlineUser[to];
 
         if(socketId) socket.to(socketId).emit("ice-candidate" , candidate);
   });
-
-  // socket.on("offer" , async(data)=>{
-  //       const {receiverId , offer} = [data.receiverId , ...data];
-  //       const receiverSocketId = onlineUser[receiverId.toString()];
-  //       const senderSocketId = socket.id;
-
-
-  //       if(receiverSocketId){
-            
-  //          socket.to(receiverId).emit("offer-Receiver" , offer);
-  //       }else{
-          
-  //         socket.to(senderSocketId).emit("user-offline");
-          
-  //       }
-        
-  // });
+  // reaction and message update
   socket.on("chat-opened", async (data) => {
     const senderId = data.senderId;
     const receiverId = socketToUser[socket.id];
