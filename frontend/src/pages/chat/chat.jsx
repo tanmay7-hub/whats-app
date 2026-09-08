@@ -78,6 +78,9 @@ function Chat() {
   const [groupPage, setGroupPage] = useState("");
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [isCaller, setIsCaller] = useState(false);
+  const [isVideoCall , setIsVideoCall] = useState(false);
+
+
   const [showCallingScreen, setShowCallingScreen] = useState(false);
   const [incomingCallDetail, setIncomingCallDetail] = useState(null);
   const [showIncomingScreen, setShowIncomingScreen] = useState(false);
@@ -142,6 +145,7 @@ function Chat() {
     const handleIncomingCall = (data) => {
       setIncomingCallDetail(data);
       setShowIncomingScreen(true);
+      setIsVideoCall(data.isVideoCall);
     };
     socket.on("incoming-call", handleIncomingCall);
 
@@ -150,11 +154,49 @@ function Chat() {
     }
   }, [])
 
-  
-  const handleClickedVideoCall = () => {
-    const data = auth.currentConversation;
+  const handleEndCall = () => {
+    
+    setShowCallingScreen(false);   
+    setShowVideoCall(false);
+    const to = (isCaller == true)  ? callData.id : incomingCallDetail.id;
+
+    console.log(to);
+    socket.emit("call-end", {
+      to
+    });
+    
+      setIsCaller(false);
+      setCallData(null);
+      
+      setIncomingCallDetail(null);
+      setShowIncomingScreen(false);
+    
+  }
+
+  useEffect(() => {
+    const handleCallEnd = () => {
+        setShowCallingScreen(false);
+        setShowVideoCall(false);
+
+        setIsCaller(false);
+        setCallData(null);
+        setIncomingCallDetail(null);
+        setShowIncomingScreen(false);
+      
+    };
+    socket.on("call-end", handleCallEnd);
+
+    return () => {
+      socket.off("call-end", handleCallEnd);
+    }
+
+  }, []);
+  const handleClickedVoiceCall = ()=>{
+        setIsVideoCall(false);
+        const data = auth.currentConversation;
 
     setCallData(data);
+    setIsCaller(true);
     setShowCallingScreen(true);
 
     socket.emit("call-user", {
@@ -162,14 +204,66 @@ function Chat() {
       caller: {
         id: auth.loggedInUser.userId,
         name: auth.loggedInUser.name,
-        profilePic: auth.loggedInUser.profilePic
+        profilePic: auth.loggedInUser.profilePic,
+        isVideoCall
+      }
+    });
+  }
+  const handleClickedVideoCall = () => {
+    setIsVideoCall(true);
+    const data = auth.currentConversation;
+
+    setCallData(data);
+    setIsCaller(true);
+    setShowCallingScreen(true);
+
+    socket.emit("call-user", {
+      to: data.id,
+      caller: {
+        id: auth.loggedInUser.userId,
+        name: auth.loggedInUser.name,
+        profilePic: auth.loggedInUser.profilePic,
+        isVideoCall
       }
     });
 
   }
-  const handleVideoCallAnswer = ()=>{
-        
+  const handleClickedReject = () => {
+    setShowIncomingScreen(false);
+    socket.emit("call-rejected", {
+      to: incomingCallDetail.id
+    });
+    setIncomingCallDetail(null);
   };
+  useEffect(() => {
+    const handleCallAccepted = () => {
+      setIsCaller(true);
+      setShowCallingScreen(false);
+      setShowVideoCall(true);
+    };
+    const handleCallRejected = () => {
+      setCallData(null);
+      setShowCallingScreen(false);
+      setShowVideoCall(false);
+    }
+    socket.on("call-accepted", handleCallAccepted);
+    socket.on("call-rejected", handleCallRejected);
+    return () => {
+      socket.off("call-accepted", handleCallAccepted);
+      socket.off("call-rejected", handleCallRejected);
+    }
+
+  }, []);
+  const handleVideoCallAnswer = () => {
+    socket.emit("call-accepted", {
+      to: incomingCallDetail.id
+    });
+
+    setShowIncomingScreen(false);
+    setIsCaller(false);
+    setShowVideoCall(true);
+  };
+
   // till here
 
 
@@ -390,7 +484,7 @@ function Chat() {
   //details about curr user
   useEffect(() => {
     if (localStorage.getItem("token") !== null) {
-        dispatch(getCurrUser());
+      dispatch(getCurrUser());
     }
   }, []);
 
@@ -715,7 +809,7 @@ function Chat() {
                   </div>
                 </div>
                 <div className="call-icons">
-                  <div className="call-icon">
+                  <div className="call-icon"onClick={handleClickedVoiceCall}>
                     <i class="fa-solid fa-phone"></i>
                   </div>
                   <div
@@ -1213,29 +1307,28 @@ function Chat() {
         {showVideoCall && (
           <div className="modal-overlay">
             <VideoCall
-              isCaller={isCaller}
-              currentConvo={auth.currentConversation}
+              isCaller = {isCaller}
+              currentConvo = {isCaller ? auth.currentConversation : incomingCallDetail}
+              onEndCall = {handleEndCall}
+              isVideoCall = {isVideoCall}
             />
           </div>
         )}
 
-       
+
         {showCallingScreen && <div className="modal-overlay">
           <CallingScreen
-            caller={auth.currentConversation}
+            caller = {auth.currentConversation}
+            onEndCall = {handleEndCall}
           />
         </div>}
-     
+
         {showIncomingScreen && <div className="modal-overlay">
           <InComingCall
-            caller={incomingCallDetail}
-            onDecline={() => {
-              setIncomingCallDetail(null);
-              setShowIncomingScreen(false);
-            }}
+            caller = {incomingCallDetail}
+            onEndCall = {handleClickedReject}
             onAnswer = {handleVideoCallAnswer}
-            
-           />
+          />
         </div>}
 
       </div>

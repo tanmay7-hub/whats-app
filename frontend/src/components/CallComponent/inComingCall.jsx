@@ -13,19 +13,16 @@ export default function InComingCall({caller , onEndCall , onAnswer}) {
                         <p>Video Call</p>
                     </div>
                 </div>
-
-
-                <div className="incomingCall-button">
-                    <div>
-                        <div className="icon">
+                <div className="incomingCall-button" >
+                    <div >
+                        <div className="icon" onClick = {onEndCall}>
                             <i class="fa-solid fa-x"></i>
-
                         </div>
                         <p>Decline</p>
                     </div>
 
                     <div>
-                        <div className="icon">
+                        <div className="icon" onClick={onAnswer}>
                             <i class="fa-solid fa-check"></i>
                            
                         </div>

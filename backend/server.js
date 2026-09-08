@@ -52,6 +52,29 @@ io.on("connection", (socket) => {
     io.emit("refresh-users");
   });
   // calling 
+  socket.on("call-accepted" , (data)=>{
+     const { to } = data;
+     const socketId = onlineUser[to];
+
+     if(socketId){
+       socket.to(socketId).emit("call-accepted");
+     }
+  });
+  socket.on("call-rejected" , (data)=>{
+    const {to} = data;
+    const socketId = onlineUser[to];
+    if(socketId){
+      socket.to(socketId).emit("call-rejected");
+    }
+  });
+  socket.on("call-end", (data)=>{
+     
+       const {to} = data;
+       const socketId = onlineUser[to];
+       if(socketId) {
+        socket.to(socketId).emit("call-end");
+       }
+  });
   socket.on("call-user", (data)=>{
     const socketId = onlineUser[data.to];
     if(socketId ){
